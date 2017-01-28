@@ -4,4 +4,6 @@ app.js.map
 typings/*
 build/*
 *.sqlite3
+*.sqlite3-journal
+
 

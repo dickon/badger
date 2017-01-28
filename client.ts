@@ -10,7 +10,7 @@ $.getJSON('/api/configs', configs=> {
     $('body').append(`using ${config}`);
     $.getJSON(`/api/config/${config}/images`, images=> {
         for (let image of images) {
-            $('body').append(`<IMG src="/api/config/${config}/image/${image}"/>`);
+            $('body').append(`<div class="imagefile"><div class="filename">${image}</div> <IMG class="thumbnail" src="/api/config/${config}/image/${image}"/></div>`);
         }        
     } 
 });
