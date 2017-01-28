@@ -24,7 +24,7 @@ app.get('/api/config/:config/images', (req, res) => {
         });
     });
 });
-app.get('/api/config/:config/images/:image', (req, res) => {
+app.get('/api/config/:config/image/:image', (req, res) => {
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
         console.log("row "+JSON.stringify(row));
         if (err != null) res.status(500).send({error:'query '+err});
