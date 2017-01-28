@@ -1,2 +1,3 @@
+import * as $ from "jquery";
 
-console.log("hello unusual world");
+console.log("done");

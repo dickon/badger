@@ -35,6 +35,6 @@ app.get('/api/config/:config/images/:image', (req, res) => {
         }
     });
 });
-app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/build/client.js'));
+app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 console.log("running");
 let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
