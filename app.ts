@@ -15,14 +15,24 @@ app.get('/api/configs', (req, res) =>
         res.json(rows);
     }));
 app.get('/api/config/:config/images', (req, res) => {
-    console.log("name "+req.params.config);
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
         console.log("row "+row);
         if (err != null) res.status(500).send({error:'query '+err});
         else fs.readdir(row.image_directory, (rErr, items) => {
             if (rErr) res.status(500).send({error:'readdir ' +err});
-            else res.json(items.filter((x:string)=> x.toLowerCase().endsWith('.jpg')); 
+            else res.json(items.filter((x:string)=> x.toLowerCase().endsWith('.jpg'))); 
         });
+    });
+});
+app.get('/api/config/:config/images/:image', (req, res) => {
+    db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
+        console.log("row "+JSON.stringify(row));
+        if (err != null) res.status(500).send({error:'query '+err});
+        else {
+            let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
+            if (match == null) res.status(500).send({error:'bad image name'}); 
+            else res.sendFile(row.image_directory + '/'+req.params.image);
+        }
     });
 });
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/build/client.js'));
