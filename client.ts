@@ -1,4 +1,4 @@
-/// <reference path="jquery.d.ts" />
+/// <reference path="typings/globals/jquery/index.d.ts" />
 
 $.getJSON('/api/configs', configs=> {
     if (configs.length != 1) {
@@ -7,13 +7,14 @@ $.getJSON('/api/configs', configs=> {
         return;
     }
     let config = configs[0].name;
-    $.getJSON(`/api/config/${config}/badges`, badges=> {
+    $.getJSON(`/api/configs/${config}/badges`, badges=> {
         for (let badge of badges) {
+            $('#badges').append(`<div class="badge">${badge.first} ${badge.last}</div>`);
         }
-        $.getJSON(`/api/config/${config}/images`, images=> {
+        $.getJSON(`/api/configs/${config}/images`, images=> {
             for (let image of images) {
-                 $('#spareImages').append(`<div class="imagefile"><div class="filename">${image}</div> <IMG class="thumbnail" src="/api/config/${config}/image/${image}"/></div>`);
+                 $('#spareImages').append(`<div class="imagefile"><div class="filename">${image}</div> <IMG class="thumbnail" src="/api/configs/${config}/image/${image}"/></div>`);
              }        
-        } 
+        }); 
     });
 });

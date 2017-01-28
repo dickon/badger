@@ -11,14 +11,15 @@ app.get('/api/configs', (req, res) =>
         if (err != null)  res.status(500).send({error:'configs query ' +err});
         else res.json(rows);
 }));
-app.get('/api/config/:config/badges', (req, res) =>
-    db.all('select first, last, badges.id, badges.filename from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.param.name, (err, rows) => {
+app.get('/api/configs/:config/badges', (req, res) => {
+    console.log(`query = [${req.param.config}]`);
+    db.all('select first, last, badges.id, badges.filename from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.params.config, (err, rows) => {
         if (err != null) res.status(500).send({error:'query ' +err})
         else res.json(rows);
+    });
 }));
-app.get('/api/config/:config/images', (req, res) => {
+app.get('/api/configs/:config/images', (req, res) => {
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
-        console.log("row "+row);
         if (err != null) res.status(500).send({error:'query '+err});
         else fs.readdir(row.image_directory, (rErr, items) => {
             if (rErr) res.status(500).send({error:'readdir ' +err});
@@ -26,9 +27,8 @@ app.get('/api/config/:config/images', (req, res) => {
         });
     });
 });
-app.get('/api/config/:config/image/:image', (req, res) => {
+app.get('/api/configs/:config/image/:image', (req, res) => {
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
-        console.log("row "+JSON.stringify(row));
         if (err != null) res.status(500).send({error:'query '+err});
         else {
             let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
