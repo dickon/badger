@@ -14,7 +14,7 @@ app.get('/api/configs', (req, res) =>
         else res.json(rows);
 }));
 app.get('/api/configs/:config/badges', (req, res) => {
-    db.all('select first, last, badges.id, badges.filename from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.params.config, (err, rows) => {
+    db.all('select first, last, badges.id, badges.filename, badges.rotation from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.params.config, (err, rows) => {
         if (err != null) res.status(500).send({error:'query ' +err})
         else res.json(rows);
     });
@@ -45,12 +45,30 @@ app.get('/api/configs/:config/image/:image/size', (req, res) => {
             let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
             if (match == null) res.status(500).send({error:'bad image name'}); 
             else sizeOf(row.image_directory + '/'+req.params.image, (err, dimensions) => {
-                    if (err != null) res.status(500).send({error:err});
+                     if (err != null) res.status(500).send({error:err});
                     else res.json(dimensions);
             });
         });
     });
 });
+app.get('/api/configs/:config/background', (req, res) => {
+    db.get('select background_image_file from configs where name=?', req.params.config, (err, row) => {
+        if (err != null) res.status(500).send({error:'query '+err});
+        else res.sendFile(row.background_image_file);
+    });
+});
+app.get('/api/configs/:config/background/size', (req, res) => {
+    db.get('select background_image_file from configs where name=?', req.params.config, (err, row) => {
+        if (err != null) res.status(500).send({error:'query '+err});
+        else {
+            sizeOf(row.background_image_file, (err, dimensions) => {
+                if (err != null) res.status(500).send({error:err});
+                else res.json(dimensions);
+            });
+        });
+    });
+});
+
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => {
     console.log(`putting ${req.params.badgeId} on filename ${req.params.filename}`);
     db.run('update badges set filename=? where id=?', req.params.filename, parseInt(req.params.badgeId));

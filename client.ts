@@ -29,20 +29,22 @@ $.getJSON('/api/configs', configs=> {
         // TODO: allow user to choose
         return;
     }
-    var config = configs[0].name;
-
-    $.getJSON(`/api/configs/${config}/badges`, badges=> {
-        for (let badge of badges) {
-            let im = "";
-            if (badge.filename) {
-                im = `<IMG draggable="true"  ondragstart="imageDrag(event, '${badge.filename}')" class="thumbnail" src="/api/configs/${config}/image/${badge.filename}"> </IMG>`;
+    let config = configs[0].name;
+    $.getJSON(`/api/configs/${config}/background/size`, badgeSize=> {
+        $.getJSON(`/api/configs/${config}/badges`, badges=> {
+            for (let badge of badges) {
+                let svg = `<image width="500" height="300" visibility="visibile" href="/api/configs/${config}/background"></image>`;
+                if (badge.filename) {
+                    svg += `<g transform="translate(350 5)"><image draggable="true"  ondragstart="imageDrag(event, '${badge.filename}')" transform='scale(0.8) rotate(${badge.rotation} 150 200) ' class="thumbnail" href="/api/configs/${config}/image/${badge.filename}"> </image></g>`;
+                }
+                svg += `<text x=100 y=100 style="font-size: 20pt; text-anchor: middle">${badge.first}</text>`;
+                svg += `<text x=100 y=200 style="font-size: 40pt; text-anchor: middle">${badge.last}</text>`;
+                $('#badges').append(`<svg class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}</svg>`);
             }
-            $('#badges').append(`<div class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${im}</div>`);
-        }
-        $.getJSON(`/api/configs/${config}/images`, images=> {
-            for (let image of images) {
-                 $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${config}/image/${image}"/></div>`);
-             }        
-        }); 
+            $.getJSON(`/api/configs/${config}/images`, images=> {
+                for (let image of images) 
+                    $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${config}/image/${image}"/></div>`);
+            }); 
+        });
     });
 });
