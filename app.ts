@@ -1,6 +1,8 @@
 import * as express from "express";
 import * as fs from "fs";
 import * as sqlite3 from "sqlite3";
+import * as sizeOf from "image-size";
+
 declare var __dirname:string;
 //import * as bodyParser from "body-parser"
 let app = express();
@@ -34,6 +36,19 @@ app.get('/api/configs/:config/image/:image', (req, res) => {
             if (match == null) res.status(500).send({error:'bad image name'}); 
             else res.sendFile(row.image_directory + '/'+req.params.image);
         }
+    });
+});
+app.get('/api/configs/:config/image/:image/size', (req, res) => {
+    db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
+        if (err != null) res.status(500).send({error:'query '+err});
+        else {
+            let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
+            if (match == null) res.status(500).send({error:'bad image name'}); 
+            else sizeOf(row.image_directory + '/'+req.params.image, (err, dimensions) => {
+                    if (err != null) res.status(500).send({error:err});
+                    else res.json(dimensions);
+            });
+        });
     });
 });
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => {
