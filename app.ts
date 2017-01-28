@@ -8,12 +8,14 @@ let db = new sqlite3.Database("test.sqlite3");
 app.use(express.static('public'));
 app.get('/api/configs', (req, res) => 
     db.all('select * from configs', (err, rows) => {
-        if (err != null) {
-            console.log("query error "+err);
-            return;
-        }
-        res.json(rows);
-    }));
+        if (err != null)  res.status(500).send({error:'configs query ' +err});
+        else res.json(rows);
+}));
+app.get('/api/config/:config/badges', (req, res) =>
+    db.all('select first, last, badges.id, badges.filename from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.param.name, (err, rows) => {
+        if (err != null) res.status(500).send({error:'query ' +err})
+        else res.json(rows);
+}));
 app.get('/api/config/:config/images', (req, res) => {
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
         console.log("row "+row);

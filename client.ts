@@ -7,10 +7,13 @@ $.getJSON('/api/configs', configs=> {
         return;
     }
     let config = configs[0].name;
-    $('body').append(`using ${config}`);
-    $.getJSON(`/api/config/${config}/images`, images=> {
-        for (let image of images) {
-            $('body').append(`<div class="imagefile"><div class="filename">${image}</div> <IMG class="thumbnail" src="/api/config/${config}/image/${image}"/></div>`);
-        }        
-    } 
+    $.getJSON(`/api/config/${config}/badges`, badges=> {
+        for (let badge of badges) {
+        }
+        $.getJSON(`/api/config/${config}/images`, images=> {
+            for (let image of images) {
+                 $('#spareImages').append(`<div class="imagefile"><div class="filename">${image}</div> <IMG class="thumbnail" src="/api/config/${config}/image/${image}"/></div>`);
+             }        
+        } 
+    });
 });
