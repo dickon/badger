@@ -12,7 +12,6 @@ app.get('/api/configs', (req, res) =>
         else res.json(rows);
 }));
 app.get('/api/configs/:config/badges', (req, res) => {
-    console.log(`query = [${req.param.config}]`);
     db.all('select first, last, badges.id, badges.filename from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.params.config, (err, rows) => {
         if (err != null) res.status(500).send({error:'query ' +err})
         else res.json(rows);
@@ -36,6 +35,11 @@ app.get('/api/configs/:config/image/:image', (req, res) => {
             else res.sendFile(row.image_directory + '/'+req.params.image);
         }
     });
+});
+app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => {
+    console.log(`putting ${req.params.badgeId} on filename ${req.params.filename}`);
+    db.run('update badges set filename=? where id=?', req.params.filename, parseInt(req.params.badgeId));
+    res.json({});
 });
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 console.log("running");
