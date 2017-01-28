@@ -21,7 +21,7 @@ app.get('/api/config/:config/images', (req, res) => {
         if (err != null) res.status(500).send({error:'query '+err});
         else fs.readdir(row.image_directory, (rErr, items) => {
             if (rErr) res.status(500).send({error:'readdir ' +err});
-            else res.json(items); 
+            else res.json(items.filter((x:string)=> x.toLowerCase().endsWith('.jpg')); 
         });
     });
 });
