@@ -33,7 +33,11 @@ $.getJSON('/api/configs', configs=> {
 
     $.getJSON(`/api/configs/${config}/badges`, badges=> {
         for (let badge of badges) {
-            $('#badges').append(`<div class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last}</div>`);
+            let im = "";
+            if (badge.filename) {
+                im = `<IMG draggable="true"  ondragstart="imageDrag(event, '${badge.filename}')" class="thumbnail" src="/api/configs/${config}/image/${badge.filename}"> </IMG>`;
+            }
+            $('#badges').append(`<div class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${im}</div>`);
         }
         $.getJSON(`/api/configs/${config}/images`, images=> {
             for (let image of images) {
