@@ -9,11 +9,10 @@ function allowDrop(ev) {
     ev.preventDefault();
 }
 
-function drop(ev) {
-    console.log("dropping");
+function drop(ev, index:number, first:string, last:string) {
     ev.preventDefault();
     let data = ev.dataTransfer.getData("text");
-    console.log(`dropping ${data}`);
+    console.log(`dropping ${data} on ${index} (${first} ${last})`);
 }
 
 $.getJSON('/api/configs', configs=> {
@@ -25,7 +24,7 @@ $.getJSON('/api/configs', configs=> {
     let config = configs[0].name;
     $.getJSON(`/api/configs/${config}/badges`, badges=> {
         for (let badge of badges) {
-            $('#badges').append(`<div class="badge" ondragover="allowDrop(event)" ondrop="drop(event)">${badge.first} ${badge.last}</div>`);
+            $('#badges').append(`<div class="badge" ondragover="allowDrop(event)" ondrop="drop(event, ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last}</div>`);
         }
         $.getJSON(`/api/configs/${config}/images`, images=> {
             for (let image of images) {
