@@ -5,7 +5,7 @@ import * as sizeOf from "image-size";
 import * as client from "knex";
 declare var __dirname:string;
 
-function jsonResponse(res: any, x: Promise) {
+function jsonResponse(res: any, x: client.QueryBuilder) {
     x.then(x => res.json(x)).catch(err => res.status(500).send({error:err}));
 }
 
@@ -47,7 +47,7 @@ app.get('/api/configs/:config/image/:image/size', (req, res) => {
                      if (err != null) res.status(500).send({error:err});
                     else res.json(dimensions);
             });
-        });
+        }
     });
 });
 app.get('/api/configs/:config/background', (req, res) => {
@@ -64,7 +64,7 @@ app.get('/api/configs/:config/background/size', (req, res) => {
                 if (err != null) res.status(500).send({error:err});
                 else res.json(dimensions);
             });
-        });
+        }
     });
 });
 
