@@ -2,11 +2,13 @@ import * as express from "express";
 import * as fs from "fs";
 import * as sqlite3 from "sqlite3";
 import * as sizeOf from "image-size";
-
+import * as client from "knex";
 declare var __dirname:string;
 //import * as bodyParser from "body-parser"
 let app = express();
+
 let db = new sqlite3.Database("test.sqlite3");
+let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 app.use(express.static('public'));
 app.get('/api/configs', (req, res) => 
     db.all('select * from configs', (err, rows) => {

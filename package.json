@@ -15,6 +15,8 @@
   "dependencies": {
     "express": "^4.14.0",
     "image-size": "^0.5.1",
+    "knex": "^0.12.6",
+    "sqlite3": "^3.1.8",
     "typings": "^2.1.0"
   }
 }
