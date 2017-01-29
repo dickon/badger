@@ -5,8 +5,8 @@ import * as sizeOf from "image-size";
 import * as client from "knex";
 declare var __dirname:string;
 
-function jsonResponse(res: any, x: Promise) {
-    x.then(x => res.json(x)).catch(err => res.status(500).send({error:err}));
+function jsonResponse(x: Promise) {
+    return ((req, res) => x.then(x => res.json(x)).catch(err => res.status(500).send({error:err})));
 }
 
 //import * as bodyParser from "body-parser"
@@ -15,7 +15,7 @@ let app = express();
 let db = new sqlite3.Database("test.sqlite3");
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 app.use(express.static('public'));
-app.get('/api/configs', (req, res) => jsonResponse(res, knex.select('*').from('configs')));
+app.get('/api/configs', jsonResponse(knex.select('*').from('configs')));
 app.get('/api/configs/:config/badges', (req, res) => {
     db.all('select first, last, badges.id, badges.filename, badges.rotation from badges inner join configs on badges.configId = configs.id where configs.name = ?', req.params.config, (err, rows) => {
         if (err != null) res.status(500).send({error:'query ' +err})
