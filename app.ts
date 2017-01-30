@@ -16,6 +16,10 @@ function getImageDirectory(req): Promise<string> {
     return knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory)
 }
 
+function getBackgroundImageFile(req): Promise<string> {
+    return knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
+}
+
 //import * as bodyParser from "body-parser"
 let app = express();
 
@@ -29,46 +33,28 @@ app.get('/api/configs/:config/images', (req, res) =>
     getImageDirectory(req).then(i=>readdir(i)).then(items=>res.json(items.filter(x=>x.toLowerCase().endsWith('.jpg'))))
     .catch(err=>res.status(500).send({error:'query '+err})));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
-            let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
-            if (match == null) res.status(500).send({error:'bad image name'}); 
-            else res.sendFile(i+'/'+req.params.image);
-    }));
-app.get('/api/configs/:config/image/:image/size', (req, res) => 
-    db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
-        if (err != null) res.status(500).send({error:'query '+err});
-        else {
-            let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
-            if (match == null) res.status(500).send({error:'bad image name'}); 
-            else sizeOf(row.image_directory + '/'+req.params.image), (err, dimensions) => {
-                     if (err != null) res.status(500).send({error:err});
-                    else res.json(dimensions);
-
-            }
-        }
-    }));
-app.get('/api/configs/:config/background', (req, res) => {
-    db.get('select background_image_file from configs where name=?', req.params.config, (err, row) => {
-        if (err != null) res.status(500).send({error:'query '+err});
-        else res.sendFile(row.background_image_file);
+    let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
+    if (match == null) res.status(500).send({error:'bad image name'}); 
+    else res.sendFile(i+'/'+req.params.image);
+}));
+app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
+    let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
+    if (match == null) res.status(500).send({error:'bad image name'}); 
+    else sizeOf(`${i}/${req.params.image}`, (err, dimensions) => {
+        if (err != null) res.status(500).send({error:err});
+        else res.json(dimensions);
     });
-});
-app.get('/api/configs/:config/background/size', (req, res) => {
-    db.get('select background_image_file from configs where name=?', req.params.config, (err, row) => {
-        if (err != null) res.status(500).send({error:'query '+err});
-        else {
-            sizeOf(row.background_image_file, (err, dimensions) => {
+}));
+app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=>res.sendFile(f)));
+app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(f=> sizeOf(f, (err, dimensions) => {
                 if (err != null) res.status(500).send({error:err});
                 else res.json(dimensions);
-            });
-        }
-    });
-});
-
+})));;
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => {
     console.log(`putting ${req.params.badgeId} on filename ${req.params.filename}`);
     db.run('update badges set filename=? where id=?', req.params.filename, parseInt(req.params.badgeId));
     res.json({});
 });
-app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
+app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/build/client.js'));
 console.log("running");
 let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
