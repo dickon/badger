@@ -5,36 +5,34 @@ import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
 declare var __dirname:string;
-let readdir = Promise.denodeify(fs.readdir);
+let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
+let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 
 function jsonResponse(res: any, x: Promise) {
     x.then(x => res.json(x)).catch(err => res.status(500).send({error:err}));
+}
+
+function getImageDirectory(req): Promise<string> {
+    knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory)
 }
 
 //import * as bodyParser from "body-parser"
 let app = express();
 
 let db = new sqlite3.Database("test.sqlite3");
-let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
+
 app.use(express.static('public'));
 app.get('/api/configs', (req, res) => jsonResponse(res, knex.select('*').from('configs')));
 app.get('/api/configs/:config/badges', (req, res) => jsonResponse(res, knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
             .select('first', 'last', 'badges.id', 'badges.filename', 'badges.rotation').where('configs.name', req.params.config)));
 app.get('/api/configs/:config/images', (req, res) => 
-    knex.select('image_directory').from('configs').where('name', req.params.config).first()
-    .then(row=> readdir(row.image_directory))
-    .then(items=>res.json(items.filter((x:string)=> x.toLowerCase().endsWith('.jpg'))))
+    getImageDirectory(req).then(i=>readdir(i)).then(items=>res.json(items.filter(x=>x.toLowerCase().endsWith('.jpg'))))
     .catch(err=>res.status(500).send({error:'query '+err})));
-app.get('/api/configs/:config/image/:image', (req, res) => {
-    db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
-        if (err != null) res.status(500).send({error:'query '+err});
-        else {
+app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
             let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
             if (match == null) res.status(500).send({error:'bad image name'}); 
-            else res.sendFile(row.image_directory + '/'+req.params.image);
-        }
-    });
-});
+            else res.sendFile(i+'/'+req.params.image);
+    }));
 app.get('/api/configs/:config/image/:image/size', (req, res) => 
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
         if (err != null) res.status(500).send({error:'query '+err});
