@@ -1,6 +1,5 @@
 import * as express from "express";
 import * as fs from "fs";
-import * as sqlite3 from "sqlite3";
 import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
@@ -12,9 +11,6 @@ let getImageDirectory = (req): Promise<string> => knex.select('image_directory')
 let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
 
 //import * as bodyParser from "body-parser"
-
-
-let db = new sqlite3.Database("test.sqlite3");
 
 app.use(express.static('public'));
 app.get('/api/configs', (req, res) => jsonResponse(res, knex.select('*').from('configs')));
