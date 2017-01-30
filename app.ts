@@ -4,24 +4,15 @@ import * as sqlite3 from "sqlite3";
 import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
-declare var __dirname:string;
+let app = express();
 let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
-
-function jsonResponse(res: any, x: Promise) {
-    x.then(x => res.json(x)).catch(err => res.status(500).send({error:err}));
-}
-
-function getImageDirectory(req): Promise<string> {
-    return knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory)
-}
-
-function getBackgroundImageFile(req): Promise<string> {
-    return knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
-}
+let jsonResponse = (res: any, x: Promise) => x.then(x => res.json(x)).catch(err => res.status(500).send({error:err}));
+let getImageDirectory = (req): Promise<string> => knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
+let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
 
 //import * as bodyParser from "body-parser"
-let app = express();
+
 
 let db = new sqlite3.Database("test.sqlite3");
 
