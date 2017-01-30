@@ -7,7 +7,9 @@ function imageDrag(ev, image) {
 function allowDrop(ev) {
     ev.preventDefault();
 }
-
+function capitalise(x) {
+    return x[0].toUpperCase() + x.substring(1);
+}
 function drop(ev, confname: string, index:number, first:string, last:string, config:string) {
     ev.preventDefault();
     let data = ev.dataTransfer.getData("text");
@@ -37,8 +39,8 @@ $.getJSON('/api/configs', configs=> {
                 if (badge.filename) {
                     svg += `<g transform="translate(350 5)"><image draggable="true"  ondragstart="imageDrag(event, '${badge.filename}')" transform='scale(0.8) rotate(${badge.rotation} 150 200) ' class="thumbnail" href="/api/configs/${config}/image/${badge.filename}"> </image></g>`;
                 }
-                svg += `<text x=100 y=100 style="font-size: 20pt; text-anchor: middle">${badge.first}</text>`;
-                svg += `<text x=100 y=200 style="font-size: 40pt; text-anchor: middle">${badge.last}</text>`;
+                svg += `<text x=100 y=100 style="font-size: 20pt; text-anchor: middle">${capitalise(badge.first)}</text>`;
+                svg += `<text x=100 y=200 style="font-size: 40pt; text-anchor: middle">${capitalise(badge.last)}</text>`;
                 $('#badges').append(`<svg class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}</svg>`);
             }
             $.getJSON(`/api/configs/${config}/images`, images=> {
