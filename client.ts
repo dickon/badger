@@ -1,5 +1,4 @@
-/// <reference path="typings/globals/jquery/index.d.ts" />
-declare var location: any;
+interface XMLHttpRequest {}
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
     ev.dataTransfer.setData("text", image);

@@ -13,7 +13,7 @@ function jsonResponse(res: any, x: Promise) {
 }
 
 function getImageDirectory(req): Promise<string> {
-    knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory)
+    return knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory)
 }
 
 //import * as bodyParser from "body-parser"

@@ -4,6 +4,9 @@
         "sourceMap": true,
         "watch": true,
         "target": "es2016",
-        "outDir": "build"
-    }
+        "outDir": "build",
+        "lib" : ["es2016" ,"dom"]
+   },
+    "files": ["typings/index.d.ts", "app.ts", "client.ts"]
+
 }
