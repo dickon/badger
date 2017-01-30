@@ -18,15 +18,13 @@ app.use(express.static('public'));
 app.get('/api/configs', (req, res) => jsonResponse(res, knex.select('*').from('configs')));
 app.get('/api/configs/:config/badges', (req, res) => jsonResponse(res, knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
             .select('first', 'last', 'badges.id', 'badges.filename', 'badges.rotation').where('configs.name', req.params.config)));
-app.get('/api/configs/:config/images', (req, res) => {
-    db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
-        if (err != null) res.status(500).send({error:'query '+err});
-        else fs.readdir(row.image_directory, (rErr, items) => {
+app.get('/api/configs/:config/images', (req, res) => 
+    knex.select('image_directory').from('configs').where('name', req.params.config).first().then(row=> {
+        fs.readdir(row.image_directory, (rErr, items) => {
             if (rErr) res.status(500).send({error:'readdir ' +err});
             else res.json(items.filter((x:string)=> x.toLowerCase().endsWith('.jpg'))); 
         });
-    });
-});
+    }).catch(err=>res.status(500).send({error:'query '+err})));
 app.get('/api/configs/:config/image/:image', (req, res) => {
     db.get('select image_directory from configs where name=?', req.params.config, (err, row) => {
         if (err != null) res.status(500).send({error:'query '+err});
