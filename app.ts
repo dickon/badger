@@ -4,6 +4,7 @@ import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
 let app = express();
+let sizeofPromise:(path:string)=>Promise<any> = Promise.denodeify(sizeOf);
 let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 let jsonResponse = (res: any, x: Promise) => x.then(x => res.json(x)).catch(err => res.status(500).send({error:err}));
@@ -33,10 +34,7 @@ app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirector
     });
 }));
 app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=>res.sendFile(f)));
-app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(f=> sizeOf(f, (err, dimensions) => {
-                if (err != null) res.status(500).send({error:err});
-                else res.json(dimensions);
-})));;
+app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(f=> sizeofPromise(f).then(dimensions => res.json(dimensions))));;
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/build/client.js'));
