@@ -34,7 +34,7 @@ app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirector
     });
 }));
 app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=>res.sendFile(f)));
-app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(f=> sizeofPromise(f).then(dimensions => res.json(dimensions))));;
+app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(sizeofPromise).then(dimensions => res.json(dimensions)));
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/build/client.js'));
