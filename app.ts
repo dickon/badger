@@ -41,11 +41,8 @@ app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImage
                 if (err != null) res.status(500).send({error:err});
                 else res.json(dimensions);
 })));;
-app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => {
-    console.log(`putting ${req.params.badgeId} on filename ${req.params.filename}`);
-    db.run('update badges set filename=? where id=?', req.params.filename, parseInt(req.params.badgeId));
-    res.json({});
-});
+app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
+    knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/build/client.js'));
 console.log("running");
 let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
