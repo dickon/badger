@@ -25,6 +25,7 @@ function drop(ev, confname: string, index:number, first:string, last:string, con
     });
 }
 
+
 $.getJSON('/api/configs', configs=> {
     if (configs.length != 1) {
         console.log("did not get exactly one config");
@@ -32,17 +33,26 @@ $.getJSON('/api/configs', configs=> {
         return;
     }
     let config = configs[0].name;
+    let badges = {};
+
+    function render(badgeId) {
+        let badge = badges[badgeId];
+        let svg = `<image width="500" height="300" visibility="visibile" href="/api/configs/${config}/background"></image>`;
+        if (badge.filename) {
+            svg += `<g transform="translate(350 5)"><image draggable="true"  ondragstart="imageDrag(event, '${badge.filename}')" transform='scale(0.8) rotate(${badge.rotation} 150 200) ' class="thumbnail" href="/api/configs/${config}/image/${badge.filename}"> </image></g>`;
+        }
+        svg += `<text x=100 y=100 style="font-size: 20pt; text-anchor: middle">${capitalise(badge.first)}</text>`;
+        svg += `<text x=100 y=200 style="font-size: 40pt; text-anchor: middle">${capitalise(badge.last)}</text>`;
+        $(`#badge${badgeId}`).html(`<svg class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}`);
+    }
+    function createBadge(badge) {
+        badges[badge.id] = badge;
+        $('#spareImages').append(`<svg class="badge" id="badge${badge.id}"></svg>`);
+        render(badge.id);
+    }
     $.getJSON(`/api/configs/${config}/background/size`, badgeSize=> {
         $.getJSON(`/api/configs/${config}/badges`, badges=> {
-            for (let badge of badges) {
-                let svg = `<image width="500" height="300" visibility="visibile" href="/api/configs/${config}/background"></image>`;
-                if (badge.filename) {
-                    svg += `<g transform="translate(350 5)"><image draggable="true"  ondragstart="imageDrag(event, '${badge.filename}')" transform='scale(0.8) rotate(${badge.rotation} 150 200) ' class="thumbnail" href="/api/configs/${config}/image/${badge.filename}"> </image></g>`;
-                }
-                svg += `<text x=100 y=100 style="font-size: 20pt; text-anchor: middle">${capitalise(badge.first)}</text>`;
-                svg += `<text x=100 y=200 style="font-size: 40pt; text-anchor: middle">${capitalise(badge.last)}</text>`;
-                $('#badges').append(`<svg class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}</svg>`);
-            }
+            badges.map(createBadge);
             $.getJSON(`/api/configs/${config}/images`, images=> {
                 for (let image of images) 
                     $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${config}/image/${image}"/></div>`);
