@@ -59,11 +59,18 @@ class Editor {
         if (badge.filename) {
             let x= badge.x == null ? 0 : badge.x;
             let y = badge.y == null ? 0 : badge.y;
-            let width = badge.width == null ? badge.imageWidth : badge.width;
-            let height = badge.height == null ? badge.imageHeight : badge.height; 
+            let width = badge.width == null ? 1 : badge.width;
+            let height = badge.height == null ? 1 : badge.height; 
+            const scaleDown = 1 / Math.max(badge.imageWidth, badge.imageHeight);
+            const badgeNormalisationTransform = `rotate(${badge.rotation}) scale(${scaleDown}) translate(-${badge.imageWidth/2}, -${badge.imageHeight/2}`;
             console.log(JSON.stringify(badge));
+            svg += `<g transform="translate(60 20) scale(40) rotate(${badge.rotation}) " >`; // clip-path="url('#iclip')"
             svg += `<defs> <clipPath id="iclip"> <rect x="${x}" y="${y}" width="${width}" height="${height}"></rect></clipPath></defs>`;
-            svg += `<g transform="translate(380 50)"><image draggable="true" ondragstart="imageDrag(event, '${badge.filename}')" clip-path="url('#iclip')" transform='scale(1.5) rotate(${badge.rotation} 180 100) ' class="thumbnail" href="/api/configs/${this.config.name}/image/${badge.filename}"> </image></g>`;
+            svg += `<rect x=-0.5 y=-0.5 width=1 height=1 style="fill: yellow"/>`;
+            svg += `<g draggable="true" ondragstart="imageDrag(event, '${badge.filename}')"  transform='${badgeNormalisationTransform})'>`;
+            svg += `<image class="thumbnail" href="/api/configs/${this.config.name}/image/${badge.filename}"> </image>`;
+            svg += `</g>`;
+            svg += `</g>`;
         }
         svg += `<text id="first${badgeId}" x=21 y=28 style="font-size: 1pt; font-family: 'Arial black'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.first)}</text>`;
         svg += `<text id="last${badgeId}" x=21 y=38 style="font-size: 1pt; font-family: 'Arial'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.last)}</text>`;
