@@ -21,22 +21,28 @@ interface Badge {
     imageHeight: number;
 }
 
+interface Config {
+    name: string;
+    badgeWidth: number;
+    badgeHeight: number;
+}
+
 class Editor {
     badges: Badge[];
     badgemap: any;
-    config: string;
+    config: Config;
 
-    constructor(confName:string) {
-        this.config = confName;
+    constructor(config:Config) {
+        this.config = config;
         this.badgemap = {};
     }
 
-    drop(ev, confname: string, index:number, first:string, last:string, config:string) {
+    drop(ev, index:number, first:string, last:string, config:string) {
         ev.preventDefault();
         let data = ev.dataTransfer.getData("text");
-        console.log(`dropping ${data} on ${index} (${first} ${last}) for ${confname}`);
+        console.log(`dropping ${data} on ${index} (${first} ${last}) for ${this.config.name}`);
         $.ajax({
-            url: `/api/configs/${confname}/badges/${index}/image/${data}`,
+            url: `/api/configs/${this.config.name}/badges/${index}/image/${data}`,
             type:'PUT',
             success: (result) => {
                 console.log(`put to server ${index}`);
@@ -49,7 +55,7 @@ class Editor {
 
     render(badgeId) {
         let badge = this.badgemap[badgeId];
-        let svg = `<image width="880" height="480" visibility="visibile" href="/api/configs/${this.config}/background"></image>`;
+        let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
         if (badge.filename) {
             let x= badge.x == null ? 0 : badge.x;
             let y = badge.y == null ? 0 : badge.y;
@@ -57,32 +63,37 @@ class Editor {
             let height = badge.height == null ? badge.imageHeight : badge.height; 
             console.log(JSON.stringify(badge));
             svg += `<defs> <clipPath id="iclip"> <rect x="${x}" y="${y}" width="${width}" height="${height}"></rect></clipPath></defs>`;
-            svg += `<g transform="translate(380 50)"><image draggable="true" ondragstart="imageDrag(event, '${badge.filename}')" clip-path="url('#iclip')" transform='scale(1.5) rotate(${badge.rotation} 180 100) ' class="thumbnail" href="/api/configs/${this.config}/image/${badge.filename}"> </image></g>`;
+            svg += `<g transform="translate(380 50)"><image draggable="true" ondragstart="imageDrag(event, '${badge.filename}')" clip-path="url('#iclip')" transform='scale(1.5) rotate(${badge.rotation} 180 100) ' class="thumbnail" href="/api/configs/${this.config.name}/image/${badge.filename}"> </image></g>`;
         }
-        svg += `<text x=120 y=280 style="font-size: 20pt; text-anchor: middle">${capitalise(badge.first)}</text>`;
-        svg += `<text x=120 y=380 style="font-size: 40pt; text-anchor: middle">${capitalise(badge.last)}</text>`;
-        $(`#badge${badgeId}`).html(`<svg class="badge" ondragover="allowDrop(event)" ondrop="drop(event, '${this.config}', ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}`);
+        svg += `<text id="first${badgeId}" x=21 y=28 style="font-size: 1pt; font-family: 'Arial black'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.first)}</text>`;
+        svg += `<text id="last${badgeId}" x=21 y=38 style="font-size: 1pt; font-family: 'Arial'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.last)}</text>`;
+        $(`#badge${badgeId}`).html(`<svg class="badge" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}`);
+        for (let name of ['first', 'last']) {
+            const elem = $(`#${name}${badgeId}`)[0];
+            const bbox = elem.getBBox();
+            elem.style['font-size'] = `${Math.min(14/bbox.height, 32/bbox.width}pt`;
+        }
     }
 
     createBadge(badge) {
         this.badgemap[badge.id] = badge;
-        $.getJSON(`/api/configs/${this.config}/image/${badge.filename}/size`, imageSize => {
+        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
-            console.log(`image size ${imageSize.width} ${imageSize.height}`);
-            $('#badges').append(`<svg class="badge" id="badge${badge.id}"></svg>`);
+            console.log(`image size ${imageSize.width} ${imageSize.height} config ${JSON.stringify(this.config)}`);
+            $('#badges').append(`<div class="badgeContainer" id="badge${badge.id}"></div>`);
             this.render(badge.id);
         });
     }
 
     loadBadges() {
-        $.getJSON(`/api/configs/${this.config}/background/size`, badgeSize=> {
-            $.getJSON(`/api/configs/${this.config}/badges`, (badges: any[])=> {
+        $.getJSON(`/api/configs/${this.config.name}/background/size`, badgeSize=> {
+            $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
                 this.badges = badges.sort((a,b)=>a.first.localeCompare(b.first));
                 this.badges.map(x=>this.createBadge(x));
-                $.getJSON(`/api/configs/${this.config}/images`, images=> {
+                $.getJSON(`/api/configs/${this.config.name}/images`, images=> {
                     images.map(image=>  
-                       $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${this.config}/image/${image}"/></div>`));
+                       $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`));
                 }); 
             });
         });
@@ -98,6 +109,6 @@ $.getJSON('/api/configs', configs=> {
         return;
     }    
 
-    editor = new Editor(configs[0].name); 
+    editor = new Editor(configs[0]); 
     editor.loadBadges();
 });
