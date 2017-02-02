@@ -59,26 +59,32 @@ class Editor {
     }
 
     render(badgeId) {
+        $(`#badge${badgeId}`).html(`<svg class="badge" id="badgeSvg${badgeId}" width="${this.config.badgeWidth*5}" height="${this.config.badgeHeight*5}"> </svg>`);
         let badge = this.badgemap[badgeId];
-        let paper = Raphael(document.getElementById(`badge${badgeId}`), this.config.badgeWidth * 10, this.config.badgeHeight*10);
-        paper.image(`/api/configs/${this.config.name}/background`, 0,0, paper.width, paper.height);
-        paper.text(paper.width*0.25, paper.height*0.5, badge.first).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
-        paper.text(paper.width*0.25, paper.height*0.75, badge.last).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
+        let paper = Snap(`#badgeSvg${badgeId}`);
+        let paperwidth = this.config.badgeWidth*5;
+        let paperheight = this.config.badgeHeight*5;
+        paper.image(`/api/configs/${this.config.name}/background`, 0,0, paperwidth, paperheight);
+        paper.text(paperwidth*0.25, paperheight*0.5, capitalise(badge.first)).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
+        paper.text(paperwidth*0.25, paperheight*0.75, capitalise(badge.last)).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
         const imLeft = 0.45;
         const imTop = 0.05;
         const imWidth = 0.98 - imLeft;
+        const imHeight = 1 - imTop*2;
         if (badge.left == null) badge.left = 0;
         if (badge.right == null) badge.right = 0;
         if (badge.top == null) badge.top = 0;
         if (badge.bottom == null) badge.bottom = 0;
         const aspectRatio = badge.imageHeight / badge.imageWidth;
         console.log(`badge ${JSON.stringify(badge)}`);
-        const imageWidth = paper.width*(1-imLeft)*(1+badge.left+badge.right)
+        const imageWidth = paperwidth*(1-imLeft)*(1+badge.left+badge.right)
         const imageHeight = imageWidth * aspectRatio;
-        let cliprect = (badge.rotation == 0 || true)? `${paper.width*imLeft} ${paper.height * imTop} ${paper.width*imWidth} ${paper.height*(1-badge.bottom - badge.top)}`:
-                                              `${paper.height*imTop}  ${paper.width*imLeft} ${paper.height*(1-badge.bottom - badge.top)} ${paper.width*(1-imLeft)}`;
-        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, (imLeft - badge.left*(imWidth))*paper.width,  (paper.height - imageHeight)/2 - badge.top*paper.height, 
-                 imageWidth, imageHeight).attr({'clip-rect': cliprect}).rotate(badge.rotation);
+        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, (imLeft - badge.left*(imWidth))*paperwidth,  (paperheight - imageHeight)/2 - badge.top*paperheight, 
+                 imageWidth, imageHeight);
+        im.transform(`r${badge.rotation}`);
+        let cliprect = paper.rect(paperwidth*imLeft, paperheight * imTop, paperwidth*imWidth, paperheight*imHeight).attr({fill:'#fff'});
+        let group = paper.group(im);
+        group.attr({mask:cliprect});
         /*
         let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
         if (badge.filename) {
@@ -111,7 +117,7 @@ class Editor {
         for (let name of ['first', 'last']) {
             const elem = $(`#${name}${badgeId}`)[0];
             const bbox = elem.getBBox();
-            elem.style['font-size'] = `${Math.min(paper.height*0.1/bbox.height, paper.width*0.23/bbox.width)}pt`;
+            elem.style['font-size'] = `${Math.min(paperheight*0.1/bbox.height, paperwidth*0.23/bbox.width)}pt`;
         }
         
     }
