@@ -63,7 +63,9 @@ class Editor {
         paper.image(`/api/configs/${this.config.name}/background`, 0,0, paper.width, paper.height);
         paper.text(paper.width*0.25, paper.height*0.5, badge.first).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
         paper.text(paper.width*0.25, paper.height*0.75, badge.last).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
-        paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, paper.width*0.55, paper.width*0.01, paper.width*0.40, paper.height*0.95).rotate(badge.rotation);
+        const imx0 = paper.width*0.55; 
+        const imy0 = paper.height*0.01;
+        paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, imx0, imy0, paper.width*0.40, paper.height*0.95).rotate(badge.rotation).attr({'clip-rect':`${imx0} ${imy0} 1200 1200`})
         /*
         let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
         if (badge.filename) {
