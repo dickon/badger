@@ -1,5 +1,6 @@
 import * as express from "express";
 import * as fs from "fs";
+import * as path from "path";
 import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
@@ -36,5 +37,6 @@ app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImage
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
+app.get('/js/raphael.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'raphael', 'raphael.js')));
 console.log("running");
 let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 

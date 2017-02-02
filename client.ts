@@ -59,6 +59,11 @@ class Editor {
 
     render(badgeId) {
         let badge = this.badgemap[badgeId];
+        let paper = Raphael(document.getElementById(`badge${badgeId}`), this.config.badgeWidth * 10, this.config.badgeHeight*10);
+        paper.image(`/api/configs/${this.config.name}/background`, 0,0, paper.width, paper.height);
+        paper.text(paper.width*0.25, paper.height*0.5, badge.first).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
+        paper.text(paper.width*0.25, paper.height*0.75, badge.last).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
+        paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, paper.width*0.55, paper.width*0.01, paper.width*0.40, paper.height*0.95).rotate(badge.rotation);
         let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
         if (badge.filename) {
 
@@ -86,11 +91,13 @@ class Editor {
         svg += `<text id="first${badgeId}" x=21 y=28 style="font-size: 1pt; font-family: 'Arial black'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.first)}</text>`;
         svg += `<text id="last${badgeId}" x=21 y=38 style="font-size: 1pt; font-family: 'Arial'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.last)}</text>`;
         $(`#badge${badgeId}`).html(`<svg class="badge" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}`);
+        */
         for (let name of ['first', 'last']) {
             const elem = $(`#${name}${badgeId}`)[0];
             const bbox = elem.getBBox();
-            elem.style['font-size'] = `${Math.min(14/bbox.height, 32/bbox.width)}pt`;
+            elem.style['font-size'] = `${Math.min(paper.height*0.1/bbox.height, paper.width*0.23/bbox.width)}pt`;
         }
+        
     }
 
     createBadge(badge) {
