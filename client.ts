@@ -68,18 +68,26 @@ class Editor {
         paper.text(paperwidth*0.25, paperheight*0.5, capitalise(badge.first)).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
         paper.text(paperwidth*0.25, paperheight*0.75, capitalise(badge.last)).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
         const imLeft = 0.45;
+        const imRight = 0.98;
         const imTop = 0.05;
-        const imWidth = 0.98 - imLeft;
+        const imWidth = imRight - imLeft;
         const imHeight = 1 - imTop*2;
         if (badge.left == null) badge.left = 0;
         if (badge.right == null) badge.right = 0;
         if (badge.top == null) badge.top = 0;
         if (badge.bottom == null) badge.bottom = 0;
         const aspectRatio = badge.imageHeight / badge.imageWidth;
-        console.log(`badge ${JSON.stringify(badge)}`);
-        const imageWidth = paperwidth*(1-imLeft)*(1+badge.left+badge.right)
+        console.log(`badge ${JSON.stringify(badge)} aspect ratio ${aspectRatio}`);
+        const imageWidthAlpha = paperwidth*(1-imLeft)*(1+badge.left+badge.right);
+        const imageWidthBeta = paperheight*(imHeight-imTop)*(1+badge.top+badge.bottom)/aspectRatio;
+        const imageWidth = Math.min(imageWidthAlpha, imageWidthBeta);
+        console.log(`image width ${imageWidthAlpha} ${imageWidthBeta} ${paperheight} ${imHeight-imTop} ${1+badge.top+badge.bottom} ${aspectRatio} chose ${imageWidth}`);
         const imageHeight = imageWidth * aspectRatio;
-        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, (imLeft - badge.left*(imWidth))*paperwidth,  (paperheight - imageHeight)/2 - badge.top*paperheight, 
+        const haveWidth = (1 - badge.left - badge.right)*imageWidth;
+        var ox = (imLeft - badge.left*(imWidth))*paperwidth;
+        const shortage = Math.max(0,imWidth*paperwidth - haveWidth);
+        console.log(`haveWidth ${haveWidth} wantWidth ${imWidth*paperwidth} shortage ${shortage}`);
+        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, ox+(shortage/2),  (paperheight - imageHeight)/2 - badge.top*paperheight, 
                  imageWidth, imageHeight);
         im.transform(`r${badge.rotation}`);
         let cliprect = paper.rect(paperwidth*imLeft, paperheight * imTop, paperwidth*imWidth, paperheight*imHeight).attr({fill:'#fff'});
