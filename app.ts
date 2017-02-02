@@ -17,7 +17,7 @@ let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x
 app.use(express.static('public'));
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
 jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
-            .select('first', 'last', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom').where('configs.name', req.params.config));
+            .select('first', 'last', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast').where('configs.name', req.params.config));
 jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg'))));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);

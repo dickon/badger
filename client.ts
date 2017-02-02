@@ -89,6 +89,8 @@ class Editor {
         console.log(`haveWidth ${haveWidth} wantWidth ${imWidth*paperwidth} shortage ${shortage}`);
         let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, ox+(shortage/2),  (paperheight - imageHeight)/2 - badge.top*paperheight, 
                  imageWidth, imageHeight);
+        if (badge.brightness == null) badge.brightness = 1.0;
+        im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
         im.transform(`r${badge.rotation}`);
         let cliprect = paper.rect(paperwidth*imLeft, paperheight * imTop, paperwidth*imWidth, paperheight*imHeight).attr({fill:'#fff'});
         let group = paper.group(im);
