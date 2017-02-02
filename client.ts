@@ -19,6 +19,7 @@ interface Badge {
     rotation: number;
     imageWidth: number;
     imageHeight: number;
+    left, right, top, bottom: number;
 }
 
 interface Config {
@@ -63,14 +64,21 @@ class Editor {
         paper.image(`/api/configs/${this.config.name}/background`, 0,0, paper.width, paper.height);
         paper.text(paper.width*0.25, paper.height*0.5, badge.first).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
         paper.text(paper.width*0.25, paper.height*0.75, badge.last).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
-        const imx0 = paper.width*0.55; 
-        const imy0 = paper.height*0.01;
-        const cx = badge.x == null ? 0 : badge.x;
-        const cy = badge.y == null ? 0 : badge.y;
-        const cw = badge.width == null ? 1: badge.width;
-        const ch = badge.height == null ? 1:badge.height;
-        const aspectRatio = (badge.imageHeight*ch) / (badge.imageWidth*cw);
-        paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, imx0, imy0, paper.width*0.40, paper.width*0.40*aspectRatio).rotate(badge.rotation).attr({'clip-rect':`${imx0} ${imy0} 1200 1200`})
+        const imLeft = 0.45;
+        const imTop = 0.05;
+        const imWidth = 0.98 - imLeft;
+        if (badge.left == null) badge.left = 0;
+        if (badge.right == null) badge.right = 0;
+        if (badge.top == null) badge.top = 0;
+        if (badge.bottom == null) badge.bottom = 0;
+        const aspectRatio = badge.imageHeight / badge.imageWidth;
+        console.log(`badge ${JSON.stringify(badge)}`);
+        const imageWidth = paper.width*(1-imLeft)*(1+badge.left+badge.right)
+        const imageHeight = imageWidth * aspectRatio;
+        let cliprect = (badge.rotation == 0 || true)? `${paper.width*imLeft} ${paper.height * imTop} ${paper.width*imWidth} ${paper.height*(1-badge.bottom - badge.top)}`:
+                                              `${paper.height*imTop}  ${paper.width*imLeft} ${paper.height*(1-badge.bottom - badge.top)} ${paper.width*(1-imLeft)}`;
+        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, (imLeft - badge.left*(imWidth))*paper.width,  (paper.height - imageHeight)/2 - badge.top*paper.height, 
+                 imageWidth, imageHeight).attr({'clip-rect': cliprect}).rotate(badge.rotation);
         /*
         let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
         if (badge.filename) {
