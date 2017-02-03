@@ -148,11 +148,13 @@ class Editor {
             $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
                 this.badges = badges.sort((a,b)=>a.first.localeCompare(b.first));
                 this.badges.map(x=>this.createBadge(x));
-                if (false)
-                $.getJSON(`/api/configs/${this.config.name}/images`, images=> {
-                    images.map(image=>  
-                       $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`));
-                }); 
+                $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
+                    images.map(image=> {
+                        if (this.badges.filter(b => b.filename == image).length == 0)
+                            $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
+                                                     `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
+                                                     `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`);
+                    }));
             });
         });
     }
