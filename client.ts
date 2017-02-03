@@ -70,6 +70,7 @@ class Editor {
             let text = paper.text(paperwidth*0.21, paperheight*(name=='first' ? 0.55 : (name == 'title'? 0.91 : 0.75 )), capitalise(badge[name])).attr({'font-family': name == 'first' ? 'Arial black':'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
             text.transform(`S(${Math.min(paperheight*(name == 'first' ? 0.35:0.2)/bbox.height, paperwidth*0.40/bbox.width)})`);
+            text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }
         const imLeft = 0.45;
         const imRight = 0.98;
@@ -99,6 +100,9 @@ class Editor {
         let cliprect = paper.rect(paperwidth*imLeft, paperheight * imTop, paperwidth*imWidth, paperheight*imHeight).attr({fill:'#fff'});
         let group = paper.group(im);
         group.attr({mask:cliprect});
+        let g2 = paper.group(group);
+        g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+
         /*
         let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
         if (badge.filename) {
