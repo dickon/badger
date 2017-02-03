@@ -42,10 +42,11 @@ class Editor {
         this.badgemap = {};
     }
 
-    drop(ev, index:number, first:string, last:string, config:string) {
+    drop(ev, index:number) {
         ev.preventDefault();
+        let badge = this.badges[index];
         let data = ev.dataTransfer.getData("text");
-        console.log(`dropping ${data} on ${index} (${first} ${last}) for ${this.config.name}`);
+        console.log(`dropping ${data} on ${index} (${badge.first} ${badge.last}) for ${this.config.name}`);
         $.ajax({
             url: `/api/configs/${this.config.name}/badges/${index}/image/${data}`,
             type:'PUT',
@@ -58,20 +59,33 @@ class Editor {
         });
     }
 
+    createBadge(badgeKey) {
+        let elems = badgeKey.split(' ');
+        let id = +elems[2];
+        let badge = this.badges[id];
+        this.badgemap[badge.id] = badge;
+        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
+            badge.imageWidth = imageSize.width;
+            badge.imageHeight = imageSize.height;
+            console.log(`image size ${imageSize.width} ${imageSize.height} config ${JSON.stringify(this.config)}`);
+            $('#badges').append(`<div class="badgeContainer" id="badge${badge.id}"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></div>`);
+            let paper = Snap(`#badgeSvg${badge.id}`);
+            paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
+            for (var name of ['first', 'last', 'title']) {
+                let text = paper.text(this.config.badgeWidth*0.21, this.config.badgeHeight*(name=='first' ? 0.55 : (name == 'title'? 0.91 : 0.75 )), capitalise(badge[name])).attr({'font-family': name == 'first' ? 'Arial black':'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
+                let bbox = text.getBBox();
+                text.transform(`S(${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)/bbox.height, this.config.badgeWidth*0.40/bbox.width)})`);
+                text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+            }           
+            this.render(badge.id);
+        });
+    }
+
     render(badgeId) {
-        let paperwidth = this.config.badgeWidth;
-        let paperheight = this.config.badgeHeight;
-        $(`#badge${badgeId}`).html(`<svg class="badge" id="badgeSvg${badgeId}" width="${paperwidth}mm" height="${paperheight}mm" viewbox="0 0 ${paperwidth} ${paperheight}"> </svg>`);
         let badge = this.badgemap[badgeId];
+        let oldImage=Snap(`#badgeImage${badgeId}`);
+        if (oldImage != null) oldImage.remove();
         let paper = Snap(`#badgeSvg${badgeId}`);
-        let bbox = paper.getBBox();
-        paper.image(`/api/configs/${this.config.name}/background`, 0,0, paperwidth, paperheight);
-        for (var name of ['first', 'last', 'title']) {
-            let text = paper.text(paperwidth*0.21, paperheight*(name=='first' ? 0.55 : (name == 'title'? 0.91 : 0.75 )), capitalise(badge[name])).attr({'font-family': name == 'first' ? 'Arial black':'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
-            let bbox = text.getBBox();
-            text.transform(`S(${Math.min(paperheight*(name == 'first' ? 0.35:0.2)/bbox.height, paperwidth*0.40/bbox.width)})`);
-            text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
-        }
         const imLeft = 0.45;
         const imRight = 0.98;
         const imTop = 0.05;
@@ -83,24 +97,25 @@ class Editor {
         if (badge.bottom == null) badge.bottom = 0;
         const aspectRatio = badge.imageHeight / badge.imageWidth;
         console.log(`badge ${JSON.stringify(badge)} aspect ratio ${aspectRatio}`);
-        const imageWidthAlpha = paperwidth*(1-imLeft)*(1+badge.left+badge.right);
-        const imageWidthBeta = paperheight*(imHeight-imTop)*(1+badge.top+badge.bottom)/aspectRatio;
+        const imageWidthAlpha = this.config.badgeWidth*(1-imLeft)*(1+badge.left+badge.right);
+        const imageWidthBeta = this.config.badgeHeight*(imHeight-imTop)*(1+badge.top+badge.bottom)/aspectRatio;
         const imageWidth = Math.min(imageWidthAlpha, imageWidthBeta);
-        console.log(`image width ${imageWidthAlpha} ${imageWidthBeta} ${paperheight} ${imHeight-imTop} ${1+badge.top+badge.bottom} ${aspectRatio} chose ${imageWidth}`);
+        console.log(`image width ${imageWidthAlpha} ${imageWidthBeta} ${this.config.badgeHeight} ${imHeight-imTop} ${1+badge.top+badge.bottom} ${aspectRatio} chose ${imageWidth}`);
         const imageHeight = imageWidth * aspectRatio;
         const haveWidth = (1 - badge.left - badge.right)*imageWidth;
-        var ox = (imLeft - badge.left*(imWidth))*paperwidth;
-        const shortage = Math.max(0,imWidth*paperwidth - haveWidth);
-        console.log(`haveWidth ${haveWidth} wantWidth ${imWidth*paperwidth} shortage ${shortage}`);
-        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, ox+(shortage/2),  (paperheight - imageHeight)/2 - badge.top*paperheight, 
+        var ox = (imLeft - badge.left*(imWidth))*this.config.badgeWidth;
+        const shortage = Math.max(0,imWidth*this.config.badgeWidth - haveWidth);
+        console.log(`haveWidth ${haveWidth} wantWidth ${imWidth*this.config.badgeWidth} shortage ${shortage}`);
+        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, ox+(shortage/2),  (this.config.badgeHeight - imageHeight)/2 - badge.top*this.config.badgeHeight, 
                  imageWidth, imageHeight);
         if (badge.brightness == null) badge.brightness = 1.0;
-        im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
+        if (badge.brightness != 1)
+            im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
         im.transform(`r${badge.rotation}`);
-        let cliprect = paper.rect(paperwidth*imLeft, paperheight * imTop, paperwidth*imWidth, paperheight*imHeight).attr({fill:'#fff'});
+        let cliprect = paper.rect(this.config.badgeWidth*imLeft, this.config.badgeHeight * imTop, this.config.badgeWidth*imWidth, this.config.badgeHeight*imHeight).attr({fill:'#fff'});
         let group = paper.group(im);
         group.attr({mask:cliprect});
-        let g2 = paper.group(group);
+        let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
         g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
 
         /*
@@ -136,25 +151,21 @@ class Editor {
         
     }
 
-    createBadge(badge) {
-        this.badgemap[badge.id] = badge;
-        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
-            badge.imageWidth = imageSize.width;
-            badge.imageHeight = imageSize.height;
-            console.log(`image size ${imageSize.width} ${imageSize.height} config ${JSON.stringify(this.config)}`);
-            $('#badges').append(`<div class="badgeContainer" id="badge${badge.id}"></div>`);
-            this.render(badge.id);
-        });
-    }
 
     loadBadges() {
         $.getJSON(`/api/configs/${this.config.name}/background/size`, badgeSize=> {
             $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
-                this.badges = badges.sort((a,b)=>a.first.localeCompare(b.first));
-                this.badges.map(x=>this.createBadge(x));
+                this.badges = {};
+                let badgeseq = [];
+                badges.map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
+                badges.map(x=> {
+                    this.badges[x.id] = x;
+                });
+                badgeseq.sort();
+                badgeseq.map(x=>this.createBadge(x));
                 $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
                     images.map(image=> {
-                        if (this.badges.filter(b => b.filename == image).length == 0)
+                        if (Object.values(this.badges).filter(b => b.filename == image).length == 0)
                             $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
                                                      `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
                                                      `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`);
