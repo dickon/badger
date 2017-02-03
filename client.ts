@@ -117,38 +117,6 @@ class Editor {
         group.attr({mask:cliprect});
         let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
         g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
-
-        /*
-        let svg = `<image width="${this.config.badgeWidth}" height="${this.config.badgeHeight}" visibility="visibile" href="/api/configs/${this.config.name}/background"></image>`;
-        if (badge.filename) {
-
-            const imageMiddleX = 62;
-            const imageMiddleY = 22;
-            const imageSize = 40; 
-            let x= badge.x == null ? 0 : badge.x;
-            let y = badge.y == null ? 0 : badge.y;
-            let width = badge.width == null ? 1 : badge.width;
-            let height = badge.height == null ? 1 : badge.height; 
-            const badgeDom = Math.max(badge.imageWidth, badge.imageHeight);
-            const scaleDown = 640 / badgeDom;
-            const badgeNormalisationTransform = `scale(${scaleDown})`;
-            const transform = badge.rotation == -90? `translate(52 2) scale(${scaleDown}) rotate(-90 150 150)` : 
-                                                    `translate(42 2) scale(${scaleDown}) `;
-            svg += `<g transform="${transform}" >`; // clip-path="url('#iclip')"
-            //svg += `<defs> <clipPath id="iclip"> <rect x="${x}" y="${y}" width="${width}" height="${height}"></rect></clipPath></defs>`;
-            svg += `<rect x=-0.5 y=-0.5 width=1 height=1 style="fill: yellow"/>`;
-            svg += `<g draggable="true" ondragstart="imageDrag(event, '${badge.filename}')">`;
-            svg += `<image class="thumbnail" href="/api/configs/${this.config.name}/image/${badge.filename}"> </image>`;
-            svg += `</g>`;
-            svg += `</g>`;
-            console.log(svg);
-        }
-        svg += `<text id="first${badgeId}" x=21 y=28 style="font-size: 1pt; font-family: 'Arial black'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.first)}</text>`;
-        svg += `<text id="last${badgeId}" x=21 y=38 style="font-size: 1pt; font-family: 'Arial'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.last)}</text>`;
-        $(`#badge${badgeId}`).html(`<svg class="badge" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}`);
-        */
-  
-        
     }
 
 
