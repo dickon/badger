@@ -59,14 +59,18 @@ class Editor {
     }
 
     render(badgeId) {
-        $(`#badge${badgeId}`).html(`<svg class="badge" id="badgeSvg${badgeId}" width="${this.config.badgeWidth*5}" height="${this.config.badgeHeight*5}"> </svg>`);
+        let paperwidth = this.config.badgeWidth;
+        let paperheight = this.config.badgeHeight;
+        $(`#badge${badgeId}`).html(`<svg class="badge" id="badgeSvg${badgeId}" width="${paperwidth}mm" height="${paperheight}mm" viewbox="0 0 ${paperwidth} ${paperheight}"> </svg>`);
         let badge = this.badgemap[badgeId];
         let paper = Snap(`#badgeSvg${badgeId}`);
-        let paperwidth = this.config.badgeWidth*5;
-        let paperheight = this.config.badgeHeight*5;
+        let bbox = paper.getBBox();
         paper.image(`/api/configs/${this.config.name}/background`, 0,0, paperwidth, paperheight);
-        paper.text(paperwidth*0.25, paperheight*0.5, capitalise(badge.first)).attr({'font-family': 'Arial black', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `first${badgeId}`);
-        paper.text(paperwidth*0.25, paperheight*0.75, capitalise(badge.last)).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:'white', stroke:'none', 'font-size':'1pt' }).node.setAttribute('id', `last${badgeId}`);
+        for (var name of ['first', 'last', 'title']) {
+            let text = paper.text(paperwidth*0.21, paperheight*(name=='first' ? 0.55 : (name == 'title'? 0.91 : 0.75 )), capitalise(badge[name])).attr({'font-family': name == 'first' ? 'Arial black':'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
+            let bbox = text.getBBox();
+            text.transform(`S(${Math.min(paperheight*(name == 'first' ? 0.35:0.2)/bbox.height, paperwidth*0.40/bbox.width)})`);
+        }
         const imLeft = 0.45;
         const imRight = 0.98;
         const imTop = 0.05;
@@ -124,11 +128,7 @@ class Editor {
         svg += `<text id="last${badgeId}" x=21 y=38 style="font-size: 1pt; font-family: 'Arial'; text-anchor: middle; fill:white; stroke:none">${capitalise(badge.last)}</text>`;
         $(`#badge${badgeId}`).html(`<svg class="badge" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id}, '${badge.first}', '${badge.last}')">${badge.first} ${badge.last} ${svg}`);
         */
-        for (let name of ['first', 'last']) {
-            const elem = $(`#${name}${badgeId}`)[0];
-            const bbox = elem.getBBox();
-            elem.style['font-size'] = `${Math.min(paperheight*0.1/bbox.height, paperwidth*0.23/bbox.width)}pt`;
-        }
+  
         
     }
 
@@ -148,6 +148,7 @@ class Editor {
             $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
                 this.badges = badges.sort((a,b)=>a.first.localeCompare(b.first));
                 this.badges.map(x=>this.createBadge(x));
+                if (false)
                 $.getJSON(`/api/configs/${this.config.name}/images`, images=> {
                     images.map(image=>  
                        $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div> <IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`));
