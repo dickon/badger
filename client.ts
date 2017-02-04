@@ -61,8 +61,24 @@ class Editor {
     }
 
     select(badgeId) {
-        console.log(`selected ${badgeId}`);
+        console.log(`selected ${badgeId}`);       
+        let badge = this.badgemap[badgeId];
+        let oldImage=Snap(`#badgeImageMain`);
+        if (oldImage != null) oldImage.remove();
+        const paper = Snap(`#editorImage`);
+        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
+            let dimensions = paper.getBBox();
+            console.log(`dimensions ${JSON.stringify(dimensions)}`);
+            
+            badge.imageWidth = imageSize.width;
+            badge.imageHeight = imageSize.height;
+            const aspectRatio = badge.imageHeight / badge.imageWidth;
+            let width = Math.min(dimensions.width, dimensions.height / aspectRatio);
+            if (width == 0) width = 512;
+            paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, 0, 0, width,  aspectRatio*width).transform(`r${badge.rotation}`).attr({id:'badgeImageMain'});
+        });
     }
+
     createBadge(badgeKey) {
         let elems = badgeKey.split(' ');
         let id = +elems[2];
@@ -71,7 +87,6 @@ class Editor {
         $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
-            console.log(`image size ${imageSize.width} ${imageSize.height} config ${JSON.stringify(this.config)}`);
             $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
             let paper = Snap(`#badgeSvg${badge.id}`);
             paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
@@ -102,16 +117,13 @@ class Editor {
         if (badge.top == null) badge.top = 0;
         if (badge.bottom == null) badge.bottom = 0;
         const aspectRatio = badge.imageHeight / badge.imageWidth;
-        console.log(`badge ${JSON.stringify(badge)} aspect ratio ${aspectRatio}`);
         const imageWidthAlpha = this.config.badgeWidth*(1-imLeft)*(1+badge.left+badge.right);
         const imageWidthBeta = this.config.badgeHeight*(imHeight-imTop)*(1+badge.top+badge.bottom)/aspectRatio;
         const imageWidth = Math.min(imageWidthAlpha, imageWidthBeta);
-        console.log(`image width ${imageWidthAlpha} ${imageWidthBeta} ${this.config.badgeHeight} ${imHeight-imTop} ${1+badge.top+badge.bottom} ${aspectRatio} chose ${imageWidth}`);
         const imageHeight = imageWidth * aspectRatio;
         const haveWidth = (1 - badge.left - badge.right)*imageWidth;
         var ox = (imLeft - badge.left*(imWidth))*this.config.badgeWidth;
         const shortage = Math.max(0,imWidth*this.config.badgeWidth - haveWidth);
-        console.log(`haveWidth ${haveWidth} wantWidth ${imWidth*this.config.badgeWidth} shortage ${shortage}`);
         let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, ox+(shortage/2),  (this.config.badgeHeight - imageHeight)/2 - badge.top*this.config.badgeHeight, 
                  imageWidth, imageHeight);
         if (badge.brightness == null) badge.brightness = 1.0;
@@ -137,6 +149,7 @@ class Editor {
                 });
                 badgeseq.sort();
                 badgeseq.map(x=>this.createBadge(x));
+                this.select(+(badgeseq[0].split(' ')[2]));
                 $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
                     images.map(image=> {
                         if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
@@ -154,10 +167,12 @@ let editor: Editor = null;
 let config = {
     content: [{
         type: 'column',
-        content:[{
-            type: 'component',
-            componentName: 'editor',
-        },{
+        content:[
+        //     {
+        //     type: 'component',
+        //     componentName: 'editor',
+        // },
+        {
             type: 'component',
             componentName: 'badges',
         },{
@@ -167,8 +182,8 @@ let config = {
     }]
 };
 let myLayout = new GoldenLayout( config );
-myLayout.registerComponent( 'editor', function( container, componentState ){
-    container.getElement().html( '<div id="editor" class="scroller"></div>' );
+myLayout.registerComponent( 'editor', function( c, s ){
+    c.getElement().html( `<div id="editor" class="scroller"><span id="svgContainer" width="60%" height="100%"><svg id="editorImage" width="100%" height="100%"></svg><span><span><form><input type="text"></input></form></span></div>` );
 });
 myLayout.registerComponent( 'badges', function( container, componentState ){
     container.getElement().html( '<div id="badges" class="scroller"></div>' );
