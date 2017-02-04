@@ -12,17 +12,24 @@
             .imagefile {
                 width: 320px;
                 background-color: peachpuff;
-                margin: 30px;
                 float: left;
             }
             .badgeContainer {
                 margin: 2px;
                 float: left;
+                background-color: white;
+            }
+            .scroller {
+                width: 100%;
+                height: 30%;
+                overflow: scroll;
+                margin: 2em;
+                background-color: skyblue;
             }
         </style>
     </head>
     <body>
-        <div id="badges"> </div>
-        <div id="spareImages"> </div>
+        <div id="badges" class="scroller"> </div>
+        <div id="spareImages" class="scroller"> </div>
     </body>
 </html>

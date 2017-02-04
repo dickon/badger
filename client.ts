@@ -68,7 +68,7 @@ class Editor {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
             console.log(`image size ${imageSize.width} ${imageSize.height} config ${JSON.stringify(this.config)}`);
-            $('#badges').append(`<div class="badgeContainer" id="badge${badge.id}"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></div>`);
+            $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
             let paper = Snap(`#badgeSvg${badge.id}`);
             paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
             for (var name of ['first', 'last', 'title']) {
