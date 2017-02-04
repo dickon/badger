@@ -113,6 +113,9 @@ class Editor {
         const imLeft = 0.45;
         const imRight = 0.98;
         const imTop = 0.05;
+        const imBottom = 0.95;
+        const imXCentre = (imLeft + imRight)/2;
+        const imYCentre = (imTop+imBottom)/2
         const imWidth = imRight - imLeft;
         const imHeight = 1 - imTop*2;
         if (badge.left == null) badge.left = 0;
@@ -120,24 +123,27 @@ class Editor {
         if (badge.top == null) badge.top = 0;
         if (badge.bottom == null) badge.bottom = 0;
         const aspectRatio = badge.imageHeight / badge.imageWidth;
-        const imageWidthAlpha = this.config.badgeWidth*(1-imLeft)*(1+badge.left+badge.right);
-        const imageWidthBeta = this.config.badgeHeight*(imHeight-imTop)*(1+badge.top+badge.bottom)/aspectRatio;
-        const imageWidth = Math.min(imageWidthAlpha, imageWidthBeta);
-        const imageHeight = imageWidth * aspectRatio;
-        const haveWidth = (1 - badge.left - badge.right)*imageWidth;
+        const fullWidthAlpha = this.config.badgeWidth*(1-imLeft)*(1+badge.left+badge.right);
+        const fullWidthBeta = this.config.badgeHeight*(imHeight-imTop)*(1+badge.top+badge.bottom)/aspectRatio;
+        const fullWidth = Math.min(fullWidthAlpha, fullWidthBeta);
+        const fullHeight = fullWidth * aspectRatio;
+        const visibleWidth = (1 - badge.left - badge.right)*fullWidth;
+        const visibleHeight = (1 - badge.top - badge.bottom)*fullHeight;
         var ox = (imLeft - badge.left*(imWidth))*this.config.badgeWidth;
-        const shortage = Math.max(0,imWidth*this.config.badgeWidth - haveWidth);
-        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, ox+(shortage/2),  (this.config.badgeHeight - imageHeight)/2 - badge.top*this.config.badgeHeight, 
-                 imageWidth, imageHeight);
+        const shortage = Math.max(0,imWidth*this.config.badgeWidth - visibleWidth);
+        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, ox+(shortage/2),  (this.config.badgeHeight - fullHeight)/2 - badge.top*this.config.badgeHeight, 
+                 fullWidth, fullHeight);
         if (badge.brightness == null) badge.brightness = 1.0;
         if (badge.brightness != 1)
             im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
         im.transform(`r${badge.rotation}`);
-        let cliprect = paper.rect(this.config.badgeWidth*imLeft, this.config.badgeHeight * imTop, this.config.badgeWidth*imWidth, this.config.badgeHeight*imHeight).attr({fill:'#fff'});
+        let cliprect = paper.rect(this.config.badgeWidth*imLeft+shortage/2, this.config.badgeHeight * imTop, this.config.badgeWidth*imWidth-shortage, this.config.badgeHeight*imHeight).attr({fill:'#fff'});
         let group = paper.group(im);
         group.attr({mask:cliprect});
         let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
         g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+        paper.text(20,20, `shortage=${shortage}`).attr({fill:'yellow', 'font-size':'8pt'});
+
     }
 
 
