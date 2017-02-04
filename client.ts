@@ -138,7 +138,7 @@ class Editor {
     }
 
 
-    loadBadges() {
+    loadBadges(spare=true) {
         $.getJSON(`/api/configs/${this.config.name}/background/size`, badgeSize=> {
             $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
                 this.badges = {};
@@ -150,13 +150,15 @@ class Editor {
                 badgeseq.sort();
                 badgeseq.map(x=>this.createBadge(x));
                 this.select(+(badgeseq[0].split(' ')[2]));
-                $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
-                    images.map(image=> {
-                        if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
-                            $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
-                                                     `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
-                                                     `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`);
-                    }));
+                if (spare) {
+                    $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
+                        images.map(image=> {
+                            if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
+                                $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
+                                                        `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
+                                                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`);
+                        }));
+                }
             });
         });
     }
@@ -181,27 +183,36 @@ let config = {
         }]
     }]
 };
-let myLayout = new GoldenLayout( config );
-myLayout.registerComponent( 'editor', function( c, s ){
-    c.getElement().html( `<div id="editor" class="scroller"><span id="svgContainer" width="60%" height="100%"><svg id="editorImage" width="100%" height="100%"></svg><span><span><form><input type="text"></input></form></span></div>` );
-});
-myLayout.registerComponent( 'badges', function( container, componentState ){
-    container.getElement().html( '<div id="badges" class="scroller"></div>' );
-});
-myLayout.registerComponent( 'spare', function( container, componentState ){
-    container.getElement().html( '<div id="spareImages" class="scroller"></div>' );
-});
-myLayout.init();
-setTimeout(()=> {
-    $.getJSON('/api/configs', configs=> {
-        if (configs.length != 1) {
-            console.log("did not get exactly one config");
-            // TODO: allow user to choose
-            return;
-        }    
 
-        editor = new Editor(configs[0]); 
-        editor.loadBadges();
+function composer() {
+    let myLayout = new GoldenLayout( config );
+    myLayout.registerComponent( 'editor', function( c, s ){
+        c.getElement().html( `<div id="editor" class="scroller"><span id="svgContainer" width="60%" height="100%"><svg id="editorImage" width="100%" height="100%"></svg><span><span><form><input type="text"></input></form></span></div>` );
     });
-}, 100);
+    myLayout.registerComponent( 'badges', function( container, componentState ){
+        container.getElement().html( '<div id="badges" class="scroller"></div>' );
+    });
+    myLayout.registerComponent( 'spare', function( container, componentState ){
+        container.getElement().html( '<div id="spareImages" class="scroller"></div>' );
+    });
+    myLayout.init();
+    setTimeout(()=> {
+        $.getJSON('/api/configs', configs=> {
+            if (configs.length != 1) {
+                console.log("did not get exactly one config");
+                // TODO: allow user to choose
+                return;
+            }    
 
+            editor = new Editor(configs[0]); 
+            editor.loadBadges(true);
+        });
+    }, 100);
+}
+
+function view() {       
+     $.getJSON('/api/configs', configs=> {
+         editor = new Editor(configs[0]); 
+         editor.loadBadges(false);
+     });
+}

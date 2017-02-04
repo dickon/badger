@@ -21,6 +21,7 @@ jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'ba
             .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast').where('configs.name', req.params.config));
 jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
+    let low = req.params.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else {
@@ -57,6 +58,7 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
     }
 }));
 app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
+    let low = req.params.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else sizeOf(`${i}/${req.params.image}`, (err, dimensions) => {
@@ -70,6 +72,8 @@ app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) =>
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'snapsvg', 'dist', 'snap.svg.js')));
-app.get('/', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html')));
+app.get('/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
+app.get('/view', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'view.html')));
+app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html')))
 console.log("running");
 let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
