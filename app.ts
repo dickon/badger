@@ -16,7 +16,6 @@ let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x
 
 //import * as bodyParser from "body-parser"
 
-app.use(express.static('public'));
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
 jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
             .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast').where('configs.name', req.params.config));
@@ -71,5 +70,6 @@ app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) =>
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'snapsvg', 'dist', 'snap.svg.js')));
+app.get('/', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html'));
 console.log("running");
 let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
