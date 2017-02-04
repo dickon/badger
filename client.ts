@@ -1,4 +1,5 @@
 interface XMLHttpRequest {}
+var GoldenLayout: any;
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
     ev.dataTransfer.setData("text", image);
@@ -147,13 +148,42 @@ class Editor {
 
 let editor: Editor = null;
 
-$.getJSON('/api/configs', configs=> {
-    if (configs.length != 1) {
-        console.log("did not get exactly one config");
-        // TODO: allow user to choose
-        return;
-    }    
-
-    editor = new Editor(configs[0]); 
-    editor.loadBadges();
+let config = {
+    content: [{
+        type: 'column',
+        content:[{
+            type: 'component',
+            componentName: 'editor',
+        },{
+            type: 'component',
+            componentName: 'badges',
+        },{
+            type: 'component',
+            componentName: 'spare',
+        }]
+    }]
+};
+let myLayout = new GoldenLayout( config );
+myLayout.registerComponent( 'editor', function( container, componentState ){
+    container.getElement().html( '<div id="editor" class="scroller"></div>' );
 });
+myLayout.registerComponent( 'badges', function( container, componentState ){
+    container.getElement().html( '<div id="badges" class="scroller"></div>' );
+});
+myLayout.registerComponent( 'spare', function( container, componentState ){
+    container.getElement().html( '<div id="spareImages" class="scroller"></div>' );
+});
+myLayout.init();
+setTimeout(()=> {
+    $.getJSON('/api/configs', configs=> {
+        if (configs.length != 1) {
+            console.log("did not get exactly one config");
+            // TODO: allow user to choose
+            return;
+        }    
+
+        editor = new Editor(configs[0]); 
+        editor.loadBadges();
+    });
+}, 100);
+
