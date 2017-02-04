@@ -1,10 +1,12 @@
 import * as express from "express";
 import * as fs from "fs";
 import * as path from "path";
+import * as child_process from "child_process";
 import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
 let app = express();
+let low = true;
 let sizeofPromise:(path:string)=>Promise<any> = Promise.denodeify(sizeOf);
 let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
@@ -18,18 +20,49 @@ app.use(express.static('public'));
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
 jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
             .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast').where('configs.name', req.params.config));
-jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg'))));
+jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.toLowerCase().endsWith('.512.jpg'))));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
     if (match == null) res.status(500).send({error:'bad image name'}); 
-    else res.sendFile(i+'/'+req.params.image);
+    else {
+        let fullres = path.resolve(i, req.params.image);
+        let lowres = path.resolve(i, req.params.image+'.512.jpg');
+        function complete() { 
+            res.sendFile(low?lowres:fullres);
+        } 
+        if (!low) return complete();
+        console.log(`full ${fullres} quarter ${lowres}`);
+        fs.stat(lowres, (errStat, stats) => {
+            if (errStat == null) {
+                complete();
+            } else {
+                console.log(`scaling ${fullres} to missing ${lowres}`);
+                var tmp = `${fullres}.${Math.random()}.jpg`
+                let cmd = `C:\\Users\\dicko\\downloads\\ffmpeg.exe -i "${fullres}" -vf scale=512:-1 "${tmp}"`;
+                console.log('+'+cmd);
+                child_process.exec(cmd, (err) => {
+                        console.log(`completed temp error [${err}]`);
+                        if (err != null) {
+                            res.status(500).send({error:`resize failed ${err.toString()}`});
+                        } else {
+                            fs.rename(tmp, lowres, (err2) => {
+                                console.log(`completed ren error [${err2}]`);
+
+                                if (err2 != null) res.status(500).send({error:`rename failed ${err2.toString()}`});
+                                else complete();
+                            });
+                        }
+                });
+            }
+        });
+    }
 }));
 app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else sizeOf(`${i}/${req.params.image}`, (err, dimensions) => {
         if (err != null) res.status(500).send({error:err});
-        else res.json(dimensions);
+        else res.json(low ? {width:512, height: Math.ceil(dimensions.height/dimensions.width*512)} : dimensions);
     });
 }));
 app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=>res.sendFile(f)));
