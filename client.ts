@@ -37,10 +37,12 @@ class Editor {
     badges: any;
     badgemap: any;
     config: Config;
+    lowPostfix: string;
 
-    constructor(config:Config) {
+    constructor(config:Config, low=false) {
         this.config = config;
         this.badgemap = {};
+        this.lowPostfix = low ? "?low=1":"";
     }
 
     drop(ev, index:number) {
@@ -61,30 +63,31 @@ class Editor {
     }
 
     select(badgeId) {
-        console.log(`selected ${badgeId}`);       
-        let badge = this.badgemap[badgeId];
-        let oldImage=Snap(`#badgeImageMain`);
-        if (oldImage != null) oldImage.remove();
-        const paper = Snap(`#editorImage`);
-        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
-            let dimensions = paper.getBBox();
-            console.log(`dimensions ${JSON.stringify(dimensions)}`);
+        // console.log(`selected ${badgeId}`);       
+        // let badge = this.badgemap[badgeId];
+        // let oldImage=Snap(`#badgeImageMain`);
+        // if (oldImage != null) oldImage.remove();
+        // const paper = Snap(`#editorImage`);
+        // $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
+        //     let dimensions = paper.getBBox();
+        //     console.log(`dimensions ${JSON.stringify(dimensions)}`);
             
-            badge.imageWidth = imageSize.width;
-            badge.imageHeight = imageSize.height;
-            const aspectRatio = badge.imageHeight / badge.imageWidth;
-            let width = Math.min(dimensions.width, dimensions.height / aspectRatio);
-            if (width == 0) width = 512;
-            paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, 0, 0, width,  aspectRatio*width).transform(`r${badge.rotation}`).attr({id:'badgeImageMain'});
-        });
+        //     badge.imageWidth = imageSize.width;
+        //     badge.imageHeight = imageSize.height;
+        //     const aspectRatio = badge.imageHeight / badge.imageWidth;
+        //     let width = Math.min(dimensions.width, dimensions.height / aspectRatio);
+        //     if (width == 0) width = 512;
+        //     paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 0, 0, width,  aspectRatio*width).transform(`r${badge.rotation}`).attr({id:'badgeImageMain'});
+        // });
     }
 
     createBadge(badgeKey) {
         let elems = badgeKey.split(' ');
         let id = +elems[2];
         let badge = this.badges[id];
+        console.log(`create ${badgeKey}`);
         this.badgemap[badge.id] = badge;
-        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size`, imageSize => {
+        $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size${this.lowPostfix}`, imageSize => {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
             $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
@@ -124,7 +127,7 @@ class Editor {
         const haveWidth = (1 - badge.left - badge.right)*imageWidth;
         var ox = (imLeft - badge.left*(imWidth))*this.config.badgeWidth;
         const shortage = Math.max(0,imWidth*this.config.badgeWidth - haveWidth);
-        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}`, ox+(shortage/2),  (this.config.badgeHeight - imageHeight)/2 - badge.top*this.config.badgeHeight, 
+        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, ox+(shortage/2),  (this.config.badgeHeight - imageHeight)/2 - badge.top*this.config.badgeHeight, 
                  imageWidth, imageHeight);
         if (badge.brightness == null) badge.brightness = 1.0;
         if (badge.brightness != 1)
@@ -156,7 +159,7 @@ class Editor {
                             if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
                                 $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
                                                         `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
-                                                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}"/></div>`);
+                                                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
                         }));
                 }
             });
@@ -180,11 +183,12 @@ let config = {
         },{
             type: 'component',
             componentName: 'spare',
+            height: 20,
         }]
     }]
 };
 
-function composer() {
+function compose() {
     let myLayout = new GoldenLayout( config );
     myLayout.registerComponent( 'editor', function( c, s ){
         c.getElement().html( `<div id="editor" class="scroller"><span id="svgContainer" width="60%" height="100%"><svg id="editorImage" width="100%" height="100%"></svg><span><span><form><input type="text"></input></form></span></div>` );
@@ -204,7 +208,7 @@ function composer() {
                 return;
             }    
 
-            editor = new Editor(configs[0]); 
+            editor = new Editor(configs[0], true); 
             editor.loadBadges(true);
         });
     }, 100);
@@ -212,7 +216,7 @@ function composer() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(configs[0]); 
+         editor = new Editor(configs[0], false); 
          editor.loadBadges(false);
      });
 }

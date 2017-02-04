@@ -21,7 +21,8 @@ jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'ba
             .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast').where('configs.name', req.params.config));
 jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
-    let low = req.params.low;
+    let low = req.query.low;
+    console.log(`image ${req.params.image}  low ${low}`)
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else {
@@ -58,8 +59,9 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
     }
 }));
 app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
-    let low = req.params.low;
+    let low = req.query.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
+    console.log(`size ${req.params.image}  low ${low}`)
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else sizeOf(`${i}/${req.params.image}`, (err, dimensions) => {
         if (err != null) res.status(500).send({error:err});
