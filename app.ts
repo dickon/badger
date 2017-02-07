@@ -8,6 +8,7 @@ import * as child_process from "child_process";
 import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
+import * as process from "process";
 let app = express();
 let low = true;
 let sizeofPromise:(path:string)=>Promise<any> = Promise.denodeify(sizeOf);
@@ -39,8 +40,9 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
                 complete();
             } else {
                 console.log(`scaling ${fullres} to missing ${lowres}`);
-                var tmp = `${fullres}.${Math.random()}.jpg`
-                let cmd = `C:\\Users\\dicko\\downloads\\ffmpeg.exe -i "${fullres}" -vf scale=512:-1 "${tmp}"`;
+                var tmp = `${fullres}.${Math.random()}.jpg`;
+                const ffmpeg = process.platform == 'darwin' ? '/Applications/ffmpeg':'C:\\Users\\dicko\\downloads\\ffmpeg.exe';
+                let cmd = `${ffmpeg} -i "${fullres}" -vf scale=512:-1 "${tmp}"`;
                 console.log('+'+cmd);
                 child_process.exec(cmd, (err) => {
                         console.log(`completed temp error [${err}]`);

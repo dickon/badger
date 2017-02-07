@@ -23,6 +23,7 @@ interface Badge {
     left, right, top, bottom: number;
 }
 
+
 interface Config {
     name: string;
     badgeWidth: number;
