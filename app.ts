@@ -1,3 +1,6 @@
+/// <reference path="typings/globals/node/index.d.ts" />
+/// <reference path="typings/modules/bluebird/index.d.ts" />
+
 import * as express from "express";
 import * as fs from "fs";
 import * as path from "path";
@@ -12,7 +15,7 @@ let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 let getImageDirectory = (req): Promise<string> => knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
 let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
-let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => res.status(500).send({error:err})));
+let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => res.status(500).send({error:err})));        
 
 //import * as bodyParser from "body-parser"
 
@@ -28,9 +31,7 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
     else {
         let fullres = path.resolve(i, req.params.image);
         let lowres = path.resolve(i, req.params.image+'.512.jpg');
-        function complete() { 
-            res.sendFile(low?lowres:fullres);
-        } 
+        let complete = () => res.sendFile(low?lowres:fullres);
         if (!low) return complete();
         console.log(`full ${fullres} quarter ${lowres}`);
         fs.stat(lowres, (errStat, stats) => {
@@ -58,6 +59,7 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
         });
     }
 }));
+
 app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
