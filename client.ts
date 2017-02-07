@@ -1,3 +1,7 @@
+/// <reference path="typings/globals/jquery/index.d.ts" />
+/// <reference path="typings/globals/snapsvg/index.d.ts" />
+
+
 interface XMLHttpRequest {}
 var GoldenLayout: any;
 function imageDrag(ev, image) {
@@ -9,6 +13,7 @@ function allowDrop(ev) {
     ev.preventDefault();
 }
 function capitalise(x) {
+    if (x === undefined) return '';
     return x[0].toUpperCase() + x.substring(1);
 }
 
@@ -22,7 +27,6 @@ interface Badge {
     imageHeight: number;
     left, right, top, bottom: number;
 }
-
 
 interface Config {
     name: string;
@@ -162,12 +166,10 @@ class Editor {
         group.attr({mask:cliprect});
         let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
         g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
-        if (false)  {
-            paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
-            paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
-            paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
-        }
-    }
+        // paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
+        // paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
+        // paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
+}
 
 
     loadBadges(spare=true) {
