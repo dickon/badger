@@ -38,6 +38,13 @@ interface HTMLElement {
     getBBox():any;
 }
 
+function choose(configs:Config[]) {
+    let config = window.location.pathname.split('/')[2];
+    let matches = configs.filter(x=>x.name == config);
+    console.log(`config matches ${JSON.stringify(matches)}`);
+    return matches[0];
+}
+
 class Editor {
     badges: any;
     badgemap: any;
@@ -233,13 +240,7 @@ function compose() {
     myLayout.init();
     setTimeout(()=> {
         $.getJSON('/api/configs', configs=> {
-            if (configs.length != 1) {
-                console.log("did not get exactly one config");
-                // TODO: allow user to choose
-                return;
-            }    
-
-            editor = new Editor(configs[0], true); 
+            editor = new Editor(choose(configs), true); 
             editor.loadBadges(true);
         });
     }, 100);
@@ -247,7 +248,19 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(configs[0], false); 
+         editor = new Editor(choose(configs), false); 
          editor.loadBadges(false);
      });
+}
+
+function makeIndex() {
+    $.getJSON('/api/configs', configs=> {
+        $('body').append($('<h1>').append('Badger'));
+        configs.map(x=> {
+            $('body').append($('<h2>').append(x.name));
+            $('body').append($('<a>').attr('href', `/configs/${x.name}/compose`).append('Compose'));
+            $('body').append($('<span>').append(' or '));
+            $('body').append($('<a>').attr('href', `/configs/${x.name}/view`).append('View'));            
+        });
+    });
 }
