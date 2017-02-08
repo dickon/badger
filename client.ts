@@ -109,7 +109,6 @@ class Editor {
                 let text = paper.text(this.config.badgeWidth*0.245, this.config.badgeHeight*(name=='first' ? 0.55 : (name == 'title'? 0.91 : 0.75 )), 
                     capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
                 let bbox = text.getBBox();
-                //text.transform(`S(${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)/bbox.height, this.config.badgeWidth*0.35/bbox.width)})`);
                 text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
                                                          this.config.badgeWidth*0.35*10/bbox.width)}pt`});
                 text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
@@ -176,31 +175,29 @@ class Editor {
         // paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
         // paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
         // paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
-}
+    }
 
 
     loadBadges(spare=true) {
-        $.getJSON(`/api/configs/${this.config.name}/background/size`, badgeSize=> {
-            $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
-                this.badges = {};
-                let badgeseq = [];
-                badges.map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
-                badges.map(x=> {
-                    this.badges[x.id] = x;
-                });
-                badgeseq.sort();
-                badgeseq.map(x=>this.createBadge(x));
-                this.select(+(badgeseq[0].split(' ')[2]));
-                if (spare) {
-                    $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
-                        images.map(image=> {
-                            if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
-                                $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
-                                                        `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
-                                                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
-                        }));
-                }
+        $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
+            this.badges = {};
+            let badgeseq = [];
+            badges.map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
+            badges.map(x=> {
+                this.badges[x.id] = x;
             });
+            badgeseq.sort();
+            badgeseq.map(x=>this.createBadge(x));
+            if (badgeseq.length != 0) this.select(+(badgeseq[0].split(' ')[2]));
+            if (spare) {
+                $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
+                    images.map(image=> {
+                        if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
+                            $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
+                                                    `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
+                                                    `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
+                    }));
+            }
         });
     }
 }
