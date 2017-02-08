@@ -9,7 +9,11 @@ import * as sizeOf from "image-size";
 import * as client from "knex";
 import * as Promise from "promise";
 import * as process from "process";
+import * as socketIo from "socket.io";
+import * as http from "http";
 let app = express();
+let server = http.createServer(app);
+let io = socketIo(server);
 let low = true;
 let sizeofPromise:(path:string)=>Promise<any> = Promise.denodeify(sizeOf);
 let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
@@ -81,5 +85,12 @@ app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','n
 app.get('/configs/:config/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
 app.get('/configs/:config/view', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'view.html')));
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html')))
+
 console.log("running");
-let server = app.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
+server.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
+console.log("listening");
+io.on('connection', (socket) => {
+    console.log('user connected');
+    socket.emit('message', {'message':'hello world'});
+});
+console.log("finished");

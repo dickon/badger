@@ -1,9 +1,10 @@
 /// <reference path="typings/globals/jquery/index.d.ts" />
 /// <reference path="typings/globals/snapsvg/index.d.ts" />
-
+/// <reference path="typings/globals/socket.io-client/index.d.ts" />
 
 interface XMLHttpRequest {}
 var GoldenLayout: any;
+
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
     ev.dataTransfer.setData("text", image);
@@ -224,6 +225,10 @@ let config = {
 };
 
 function compose() {
+    let socket = io(); 
+    socket.on('message', (data) => { 
+        console.log(`socket received ${JSON.stringify(data)}`);
+    });
     let myLayout = new GoldenLayout( config );
     myLayout.registerComponent( 'editor', function( c, s ){
         c.getElement().html( `<div id="editor" class="scroller"><span id="svgContainer" width="60%" height="100%"><svg id="editorImage" width="100%" height="100%"></svg><span><span><form><input type="text"></input></form></span></div>` );
