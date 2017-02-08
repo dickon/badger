@@ -30,6 +30,7 @@ interface Badge {
 }
 
 interface Config {
+    id: number;
     name: string;
     badgeWidth: number;
     badgeHeight: number;
@@ -51,11 +52,13 @@ class Editor {
     badgemap: any;
     config: Config;
     lowPostfix: string;
+    spareImages: string[];
 
     constructor(config:Config, low=false) {
         this.config = config;
         this.badgemap = {};
         this.lowPostfix = low ? "?low=1":"";
+        this.spareImages = [];
     }
 
     drop(ev, index:number) {
@@ -178,6 +181,14 @@ class Editor {
         // paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
     }
 
+    drawSpareImage(image: string) {
+        if ($.inArray(image, this.spareImages) != -1) return;
+        this.spareImages.push(image);
+        $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
+                                `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
+                                `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
+    }
+
 
     loadBadges(spare=true) {
         $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
@@ -194,9 +205,7 @@ class Editor {
                 $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
                     images.map(image=> {
                         if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
-                            $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
-                                                    `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
-                                                    `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
+                            this.drawSpareImage(image);
                     }));
             }
         });
@@ -225,7 +234,7 @@ let config = {
 };
 
 function compose() {
-    let socket = io(); 
+    let socket = io.connect();
     socket.on('message', (data) => { 
         console.log(`socket received ${JSON.stringify(data)}`);
     });
@@ -243,7 +252,9 @@ function compose() {
     setTimeout(()=> {
         $.getJSON('/api/configs', configs=> {
             editor = new Editor(choose(configs), true); 
+            socket.emit('usingConfig', choose(configs).id);
             editor.loadBadges(true);
+            socket.on('newImage', (filename) => editor.drawSpareImage(filename));
         });
     }, 100);
 }

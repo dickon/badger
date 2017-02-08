@@ -11,6 +11,8 @@ import * as Promise from "promise";
 import * as process from "process";
 import * as socketIo from "socket.io";
 import * as http from "http";
+import * as chokidar from "chokidar";
+
 let app = express();
 let server = http.createServer(app);
 let io = socketIo(server);
@@ -92,5 +94,19 @@ console.log("listening");
 io.on('connection', (socket) => {
     console.log('user connected');
     socket.emit('message', {'message':'hello world'});
+    socket.on('usingConfig', (id) => {
+        console.log(`client using ${id}`);
+        knex.select('image_directory').from('configs').where('id', id).first().then(config => {
+            console.log(`monitoring ${config.image_directory}`);
+
+            chokidar.watch(config.image_directory, {depth:0}).on('add', (path, stats)=> {
+                if (path.toLowerCase().endsWith('.jpg') && !path.endsWith('.512.jpg')) {
+                    console.log(path, stats);
+                    socket.emit('newImage', path.split('/').slice(-1)[0]);
+                }
+
+            });
+        });
+    });
 });
 console.log("finished");
