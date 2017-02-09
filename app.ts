@@ -87,6 +87,15 @@ app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(
 app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(sizeofPromise).then(dimensions => res.json(dimensions)));
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
+app.delete('/api/configs/:config/image/:filename', (req, res) => {
+    knex.select('id').from('configs').where('name', req.params.config).first().pluck('id').then((configIds:number[])=> {
+        let q= {filename:req.params.filename, configId:configIds[0]};
+        console.log(`hide ${req.params.config} ${req.params.filename} ${JSON.stringify(q)}`);
+        knex('images').where(q).update({hidden: 1}).then(y=> {
+            knex('images').where(q).then(x=>res.json(x));
+        });
+    }
+});
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'snapsvg', 'dist', 'snap.svg.js')));
 app.get('/configs/:config/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
@@ -98,15 +107,12 @@ server.listen(3000, () => console.log(`listening on ${server.address().port}`));
 console.log("listening");
 
 function considerImage(filename:String, configId: number) {
-    console.log(`considering ${filename}`);
     let lf:String = filename.toLowerCase();
     if (lf.endsWith('.jpg') && !lf.endsWith('.512.jpg')) {
         knex('images').where({filename: filename, configId: configId}).count().first().then(n=> {
             let coverage = n['count(*)'];
-            console.log(`coverage ${filename} ${coverage}`);
-
             if (coverage==0) {
-                knex('images').insert({filename:filename, configId:configId}).then(x=>{ 
+                knex('images').insert({filename:filename, hidden:0, configId:configId}).then(x=>{ 
                     knex('images').where('filename', filename).where('configId', configId).first().then((image:Image)=> io.sockets.emit('newImage', image));
                 });
             }

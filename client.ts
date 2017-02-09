@@ -211,14 +211,23 @@ class Editor {
         if (image.hidden == 1) return;
         this.spareImages.push(image.filename);
         let index = this.spareImages.length;
-        $('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="$('#imagefile${index}').remove();">X</button></span></div>`+
+        $('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="editor.closeSpareImage(${index})").remove();">X</button></span></div>`+
                                 `<IMG draggable="true"  ondragstart="imageDrag(event, '${image.filename}')" `+
                                 `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
     }
 
     closeSpareImage(index: number) {
+        let filename = this.spareImages[index];
         $(`#imagefile${index}`).remove();
+        $.ajax({
+            url: `/api/configs/${this.config.name}/image/${filename}`,
+            type:'DELETE',
+            success: (result) => {
+                console.log(`delete on server ${index} ${filename} ${JSON.stringify(result)}`);
+            }
+        });
     }
+
 
     loadBadges(spare=true) {
         $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
