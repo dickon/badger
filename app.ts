@@ -1,6 +1,12 @@
 /// <reference path="typings/globals/node/index.d.ts" />
 /// <reference path="typings/modules/bluebird/index.d.ts" />
 
+// TODO: remove this hack and get the es6 declarations in place properly
+interface String {
+    endsWith(searchString: string, endPosition?: number): boolean;
+    toLowerCase(): String;
+}
+
 import * as express from "express";
 import * as fs from "fs";
 import * as path from "path";
@@ -24,12 +30,10 @@ let getImageDirectory = (req): Promise<string> => knex.select('image_directory')
 let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
 let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => res.status(500).send({error:err})));        
 
-//import * as bodyParser from "body-parser"
-
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
-jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
-            .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast').where('configs.name', req.params.config));
-jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
+jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').join('images', 'badges.filename', '=', 'images.filename')
+            .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'images.left', 'images.top', 'images.right', 'images.bottom', 'images.brightness', 'images.contrast').where('configs.name', req.params.config));
+jsonGet('/api/configs/:config/images', req => knex('images').join('configs', 'images.configId', '=', 'configs.id').pluck('badges.filename'));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
@@ -92,18 +96,18 @@ console.log("running");
 server.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
 console.log("listening");
 
-knex.select('*').from('configs').then(configs=> configs.map(config=> {
-    chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => {
-        if (path.toLowerCase().endsWith('.jpg') && !path.endsWith('.512.jpg')) {
-            let filename = path.split('/').slice(-1)[0];
-            knex('images').where({filename: filename, configId: config.id}).count().first().then(n=> {
-                if (n['count(*)']==0) {
-                    knex('images').insert({filename:filename, configId:config.id}).then(x=>false);
-                }
-            })
-        }
-    });
-});
+function considerImage(filename:String, configId: number) {
+    let lf:String = filename.toLowerCase();
+    if (lf.endsWith('.jpg') && !lf.endsWith('.512.jpg')) {
+        knex('images').where({filename: filename, configId: configId}).count().first().then(n=> {
+            if (n['count(*)']==0) {
+                knex('images').insert({filename:filename, configId:configId}).then(x=>false);
+            }
+        });
+    }
+}
+
+knex.select('*').from('configs').then(configs=> configs.map(config=> chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => considerImage(path.split('/').slice(-1)[0], config.id))));
 io.on('connection', (socket) => {
     console.log('user connected');
     socket.emit('message', {'message':'hello world'});
