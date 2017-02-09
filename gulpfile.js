@@ -6,7 +6,7 @@ gulp.task('default', ['ts', 'watch', 'nodemon']);
 // Compile typescript sources
 gulp.task('ts', function() {
 	gulp.src(['*.ts'])
-		.pipe(ts({module: 'commonjs', target: 'es2016'}))
+		.pipe(ts({module: 'commonjs', target: 'es2016', 'lib':['es6', 'DOM']}))
 		.js
 		.pipe(gulp.dest('./build'));
 });

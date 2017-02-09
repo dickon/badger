@@ -33,7 +33,7 @@ let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
 jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').join('images', 'badges.filename', '=', 'images.filename')
             .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'images.left', 'images.top', 'images.right', 'images.bottom', 'images.brightness', 'images.contrast').where('configs.name', req.params.config));
-jsonGet('/api/configs/:config/images', req => knex('images').join('configs', 'images.configId', '=', 'configs.id').pluck('badges.filename'));
+jsonGet('/api/configs/:config/images', req => knex('images').join('configs', 'images.configId', '=', 'configs.id').where('configs.name', req.params.config));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
@@ -56,7 +56,7 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
                         console.log(`completed temp error [${err}]`);
                         if (err != null) {
                             res.status(500).send({error:`resize failed ${err.toString()}`});
-                        } else {
+                        } else {``
                             fs.rename(tmp, lowres, (err2) => {
                                 console.log(`completed ren error [${err2}]`);
 
@@ -69,6 +69,7 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
         });
     }
 }));
+
 
 app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
