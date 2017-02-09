@@ -185,13 +185,13 @@ class Editor {
 
             const imagePositionLeft = imXCentre-fullWidth*(badge.left - badge.right + 1)/2;  
             const imagePositionTop = imYCentre-fullHeight*(badge.top - badge.bottom +1)/2;
-            //paper.rect(imLeft*this.config.badgeWidth, imTop*this.config.badgeHeight, (imRight-imLeft)*this.config.badgeWidth, (imBottom-imTop)*this.config.badgeHeight).attr({fill:'red'});
             let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
                     imagePositionLeft, imagePositionTop, fullWidth, fullHeight);
             if (badge.brightness == null) badge.brightness = 1.0;
-            if (badge.brightness != 1)
+            if (badge.brightness != 1) {
                 im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness/2))});
-            im.transform(`r${badge.rotation}`);
+            }
+            //im.transform(`r${badge.rotation}`);
             let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
                                     visibleWidth, visibleHeight).attr({fill:'#fff'});
             let group = paper.group(im);
@@ -199,14 +199,10 @@ class Editor {
             let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
             g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
         }
-        // paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
-        // paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
-        // paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
     }
 
 
     drawSpareImage(image: Image) {
-        console.log(`draw spare image ${JSON.stringify(image)}`);
         if ($.inArray(image.filename, this.spareImages) != -1) return;
         if (image.hidden == 1) return;
         this.spareImages.push(image.filename);
