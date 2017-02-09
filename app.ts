@@ -32,7 +32,6 @@ jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'ba
 jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
-    console.log(`image ${req.params.image}  low ${low}`)
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else {
@@ -40,7 +39,6 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
         let lowres = path.resolve(i, req.params.image+'.512.jpg');
         let complete = () => res.sendFile(low?lowres:fullres);
         if (!low) return complete();
-        console.log(`full ${fullres} quarter ${lowres}`);
         fs.stat(lowres, (errStat, stats) => {
             if (errStat == null) {
                 complete();
@@ -71,14 +69,16 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
 app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
     let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
-    console.log(`size ${req.params.image}  low ${low}`)
     if (match == null) res.status(500).send({error:'bad image name'}); 
     else sizeOf(`${i}/${req.params.image}`, (err, dimensions) => {
         if (err != null) res.status(500).send({error:err});
         else res.json(low ? {width:512, height: Math.ceil(dimensions.height/dimensions.width*512)} : dimensions);
     });
 }));
-app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=>res.sendFile(f)));
+app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=> {
+    if (f == null) res.status(404).send('no background');
+    else res.sendFile(f);
+}));
 app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(sizeofPromise).then(dimensions => res.json(dimensions)));
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
     knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
@@ -101,7 +101,6 @@ io.on('connection', (socket) => {
 
             chokidar.watch(config.image_directory, {depth:0}).on('add', (path, stats)=> {
                 if (path.toLowerCase().endsWith('.jpg') && !path.endsWith('.512.jpg')) {
-                    console.log(path, stats);
                     socket.emit('newImage', path.split('/').slice(-1)[0]);
                 }
 

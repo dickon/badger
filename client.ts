@@ -105,7 +105,6 @@ class Editor {
         let elems = badgeKey.split(' ');
         let id = +elems[2];
         let badge = this.badges[id];
-        console.log(`create ${badgeKey}`);
         this.badgemap[badge.id] = badge;
         if (badge.filename == null) {
             this.processBadge(badge);
@@ -202,11 +201,17 @@ class Editor {
     drawSpareImage(image: string) {
         if ($.inArray(image, this.spareImages) != -1) return;
         this.spareImages.push(image);
-        $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
+        let index = this.spareImages.length;
+        $('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image}</span><span class="close"><button class="close" onclick="editor.closeSpareImage('${image}', ${index})">X</button></span></div>`+
                                 `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
                                 `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
     }
 
+    closeSpareImage(image: string, index: number) {
+        console.log(`close ${image}`);
+        this.spareI
+        $(`#imagefile${index}`).remove();
+    }
 
     loadBadges(spare=true) {
         $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
