@@ -91,6 +91,19 @@ app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 
 console.log("running");
 server.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
 console.log("listening");
+
+knex.select('*').from('configs').then(configs=> configs.map(config=> {
+    chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => {
+        if (path.toLowerCase().endsWith('.jpg') && !path.endsWith('.512.jpg')) {
+            let filename = path.split('/').slice(-1)[0];
+            knex('images').where({filename: filename, configId: config.id}).count().first().then(n=> {
+                if (n['count(*)']==0) {
+                    knex('images').insert({filename:filename, configId:config.id}).then(x=>false);
+                }
+            })
+        }
+    });
+});
 io.on('connection', (socket) => {
     console.log('user connected');
     socket.emit('message', {'message':'hello world'});

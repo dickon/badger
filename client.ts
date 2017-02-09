@@ -209,7 +209,6 @@ class Editor {
 
     closeSpareImage(image: string, index: number) {
         console.log(`close ${image}`);
-        this.spareI
         $(`#imagefile${index}`).remove();
     }
 
