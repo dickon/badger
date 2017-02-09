@@ -28,11 +28,14 @@ let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 let getImageDirectory = (req): Promise<string> => knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
 let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
-let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => res.status(500).send({error:err})));        
+let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => {
+    console.log(`query error ${err}`);
+    res.status(500).send({error:err});
+    }));        
 
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
 jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').join('images', 'badges.filename', '=', 'images.filename')
-            .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'images.left', 'images.top', 'images.right', 'images.bottom', 'images.brightness', 'images.contrast').where('configs.name', req.params.config));
+            .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'images.rotation', 'images.left', 'images.top', 'images.right', 'images.bottom', 'images.brightness', 'images.contrast').where('configs.name', req.params.config));
 jsonGet('/api/configs/:config/images', req => knex('images').join('configs', 'images.configId', '=', 'configs.id').where('configs.name', req.params.config));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
     let low = req.query.low;
@@ -94,7 +97,7 @@ app.delete('/api/configs/:config/image/:filename', (req, res) => {
         knex('images').where(q).update({hidden: 1}).then(y=> {
             knex('images').where(q).then(x=>res.json(x));
         });
-    }
+    });
 });
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'snapsvg', 'dist', 'snap.svg.js')));
@@ -120,7 +123,7 @@ function considerImage(filename:String, configId: number) {
     }
 }
 
-knex.select('*').from('configs').then(configs=> configs.map(config=> chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => considerImage(path.split('/').slice(-1)[0], config.id))));
+//knex.select('*').from('configs').then(configs=> configs.map(config=> chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => considerImage(path.split('/').slice(-1)[0], config.id))));
 io.on('connection', (socket) => {
     console.log('user connected');
     socket.emit('message', {'message':'hello world'});
