@@ -107,6 +107,7 @@ app.get('/css/goldenlayout-light.theme.css',(req, res) => res.sendFile(path.reso
 app.get('/css/goldenlayout-base.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-base.css')));
 app.get('/configs/:config/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
 app.get('/configs/:config/view', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'view.html')));
+app.get('/configs/:config/grid', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'grid.html')));
 
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html')))
 

@@ -312,6 +312,15 @@ function makeIndex() {
             $('body').append($('<a>').attr('href', `/configs/${x.name}/compose`).append('Compose'));
             $('body').append($('<span>').append(' or '));
             $('body').append($('<a>').attr('href', `/configs/${x.name}/view`).append('View'));            
+            $('body').append($('<span>').append(' or '));
+            $('body').append($('<a>').attr('href', `/configs/${x.name}/grid`).append('Grid'));            
         });
     });
+}
+
+function grid() {
+    $.getJSON('/api/configs', configs=> {
+         let config = choose(configs);
+         $('body').append('grid of '+config.name);
+    } 
 }
