@@ -101,8 +101,13 @@ app.delete('/api/configs/:config/image/:filename', (req, res) => {
 });
 app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
 app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'snapsvg', 'dist', 'snap.svg.js')));
+app.get('/js/jquery.min.js', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'jquery', 'dist', 'jquery.min.js')));
+app.get('/js/goldenlayout.min.js', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'dist', 'goldenlayout.min.js')));
+app.get('/css/goldenlayout-light.theme.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-light.theme.css')));
+app.get('/css/goldenlayout-base.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-base.css')));
 app.get('/configs/:config/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
 app.get('/configs/:config/view', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'view.html')));
+
 app.get('/', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'index.html')))
 
 console.log("running");
