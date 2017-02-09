@@ -286,7 +286,7 @@ function compose() {
             editor = new Editor(config, true); 
             socket.emit('usingConfig', config.id);
             editor.loadBadges(true);
-            socket.on('newImage', (filename) => editor.drawSpareImage({filename:filename, hidden:0, configId:config.id}));
+            socket.on('newImage', (image:Image) => editor.drawSpareImage(image));
         });
     }, 100);
 }

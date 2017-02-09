@@ -98,11 +98,17 @@ server.listen(3000, () => console.log(`listening on ${server.address().port}`));
 console.log("listening");
 
 function considerImage(filename:String, configId: number) {
+    console.log(`considering ${filename}`);
     let lf:String = filename.toLowerCase();
     if (lf.endsWith('.jpg') && !lf.endsWith('.512.jpg')) {
         knex('images').where({filename: filename, configId: configId}).count().first().then(n=> {
-            if (n['count(*)']==0) {
-                knex('images').insert({filename:filename, configId:configId}).then(x=>false);
+            let coverage = n['count(*)'];
+            console.log(`coverage ${filename} ${coverage}`);
+
+            if (coverage==0) {
+                knex('images').insert({filename:filename, configId:configId}).then(x=>{ 
+                    knex('images').where('filename', filename).where('configId', configId).first().then((image:Image)=> io.sockets.emit('newImage', image));
+                });
             }
         });
     }
@@ -114,16 +120,6 @@ io.on('connection', (socket) => {
     socket.emit('message', {'message':'hello world'});
     socket.on('usingConfig', (id) => {
         console.log(`client using ${id}`);
-        knex.select('image_directory').from('configs').where('id', id).first().then(config => {
-            console.log(`monitoring ${config.image_directory}`);
-
-            chokidar.watch(config.image_directory, {depth:0}).on('add', (path, stats)=> {
-                if (path.toLowerCase().endsWith('.jpg') && !path.endsWith('.512.jpg')) {
-                    socket.emit('newImage', path.split('/').slice(-1)[0]);
-                }
-
-            });
-        });
     });
 });
 console.log("finished");
