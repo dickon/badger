@@ -136,7 +136,8 @@ class Editor {
         this.render(badge.id);
         for (var name of ['first', 'last', 'title']) {
             let width = this.grid && name == 'last' ? 0.18 : 0.35;
-            let text = paper.text(this.config.badgeWidth*(this.grid?0.5:0.245), this.config.badgeHeight*(name=='first' ? (this.grid ? 0.2:0.55) : (name == 'title'? 0.91 : 0.75 )), 
+            let y = name=='first' ? (this.grid ? 0.2:0.55) : (name == 'title'? 0.91 : (this.grid?0.86:0.75) );
+            let text = paper.text(this.config.badgeWidth*(this.grid?0.5:0.245), this.config.badgeHeight*y, 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
             text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
