@@ -63,12 +63,14 @@ class Editor {
     config: Config;
     lowPostfix: string;
     spareImages: string[];
+    grid: boolean;
 
-    constructor(config:Config, low=false) {
+    constructor(config:Config, low=false, grid=false) {
         this.config = config;
         this.badgemap = {};
         this.lowPostfix = low ? "?low=1":"";
         this.spareImages = [];
+        this.grid = grid;
     }
 
     drop(ev, index:number) {
@@ -130,14 +132,15 @@ class Editor {
     processBadge(badge) {
         $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         let paper = Snap(`#badgeSvg${badge.id}`);
-        paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
+        if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         this.render(badge.id);
         for (var name of ['first', 'last', 'title']) {
-            let text = paper.text(this.config.badgeWidth*0.245, this.config.badgeHeight*(name=='first' ? 0.55 : (name == 'title'? 0.91 : 0.75 )), 
+            let width = this.grid && name == 'last' ? 0.18 : 0.35;
+            let text = paper.text(this.config.badgeWidth*(this.grid?0.5:0.245), this.config.badgeHeight*(name=='first' ? (this.grid ? 0.2:0.55) : (name == 'title'? 0.91 : 0.75 )), 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
             text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
-                                                        this.config.badgeWidth*0.35*10/bbox.width)}pt`});
+                                                        this.config.badgeWidth*width*10/bbox.width)}pt`});
             text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
     }
@@ -321,6 +324,14 @@ function makeIndex() {
 function grid() {
     $.getJSON('/api/configs', configs=> {
          let config = choose(configs);
-         $('body').append('grid of '+config.name);
-    } 
+         config.badgeHeight = 20;
+         config.badgeWidth = 20;
+         config.imageLeft = 0;
+         config.imageRight = 1;
+         config.imageTop = 0;
+         config.imageBottom = 1;
+         
+         let editor = new Editor(config, true, true); 
+         editor.loadBadges(false);
+    });
 }
