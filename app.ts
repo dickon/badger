@@ -34,7 +34,7 @@ let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x
     }));        
 
 jsonGet('/api/configs', req => knex.select('*').from('configs'));
-jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').join('images', 'badges.filename', '=', 'images.filename')
+jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').leftOuterJoin('images', 'badges.filename', '=', 'images.filename')
             .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'images.rotation', 'images.left', 'images.top', 'images.right', 'images.bottom', 'images.brightness', 'images.contrast').where('configs.name', req.params.config));
 jsonGet('/api/configs/:config/images', req => knex('images').join('configs', 'images.configId', '=', 'configs.id').where('configs.name', req.params.config));
 app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
@@ -51,7 +51,7 @@ app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req
                 complete();
             } else {
                 console.log(`scaling ${fullres} to missing ${lowres}`);
-                var tmp = `${fullres}.${Math.random()}.jpg`;
+                var tmp = `${fullres}.${Math.random()}.work.jpg`;
                 const ffmpeg = process.platform == 'darwin' ? '/Applications/ffmpeg':'C:\\Users\\dicko\\downloads\\ffmpeg.exe';
                 let cmd = `${ffmpeg} -i "${fullres}" -vf scale=512:-1 "${tmp}"`;
                 console.log('+'+cmd);
@@ -89,7 +89,11 @@ app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(
 }));
 app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(sizeofPromise).then(dimensions => res.json(dimensions)));
 app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
-    knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=>res.json(x)));
+    knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=> {
+        knex('badges').where('id', '=', parseInt(req.params.badgeId)).first().then( badge=> {
+            knex('images').where({filename: req.params.filename, configId:badge.configId}).update({recentFirst:badge.first, recentLast:badge.last, recentTitle:badge.title}).then(z=>res.json(x));
+        });
+    }));
 app.delete('/api/configs/:config/image/:filename', (req, res) => {
     knex.select('id').from('configs').where('name', req.params.config).first().pluck('id').then((configIds:number[])=> {
         let q= {filename:req.params.filename, configId:configIds[0]};
@@ -117,7 +121,7 @@ console.log("listening");
 
 function considerImage(filename:String, configId: number) {
     let lf:String = filename.toLowerCase();
-    if (lf.endsWith('.jpg') && !lf.endsWith('.512.jpg')) {
+    if (lf.endsWith('.jpg') && !lf.endsWith('.512.jpg')&& !lf.endsWith('.work.jpg')) {
         knex('images').where({filename: filename, configId: configId}).count().first().then(n=> {
             let coverage = n['count(*)'];
             if (coverage==0) {
@@ -129,7 +133,7 @@ function considerImage(filename:String, configId: number) {
     }
 }
 
-//knex.select('*').from('configs').then(configs=> configs.map(config=> chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => considerImage(path.split('/').slice(-1)[0], config.id))));
+knex.select('*').from('configs').then(configs=> configs.map(config=> chokidar.watch(config.image_directory, {depth: 0}).on('add', (path, stats) => considerImage(path.split('/').slice(-1)[0], config.id))));
 io.on('connection', (socket) => {
     console.log('user connected');
     socket.emit('message', {'message':'hello world'});

@@ -114,6 +114,7 @@ class Editor {
         let id = +elems[2];
         let badge = this.badges[id];
         this.badgemap[badge.id] = badge;
+         $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         if (badge.filename == null) {
             this.processBadge(badge);
         } else {
@@ -130,7 +131,7 @@ class Editor {
     }
 
     processBadge(badge) {
-        $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
+       
         let paper = Snap(`#badgeSvg${badge.id}`);
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         this.render(badge.id);
@@ -140,7 +141,7 @@ class Editor {
             let text = paper.text(this.config.badgeWidth*(this.grid?0.5:0.245), this.config.badgeHeight*y, 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
-            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
+            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.28:0.2)*10/bbox.height, 
                                                         this.config.badgeWidth*width*10/bbox.width)}pt`});
             text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
@@ -211,13 +212,12 @@ class Editor {
         if (image.hidden == 1) return;
         this.spareImages.push(image.filename);
         let index = this.spareImages.length;
-        $('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="editor.closeSpareImage(${index})").remove();">X</button></span></div>`+
+        $('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="editor.closeSpareImage('${image.filename}',${index})").remove();">X</button></span></div>`+
                                 `<IMG draggable="true"  ondragstart="imageDrag(event, '${image.filename}')" `+
                                 `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
     }
 
-    closeSpareImage(index: number) {
-        let filename = this.spareImages[index];
+    closeSpareImage(filename:string, index: number) {
         $(`#imagefile${index}`).remove();
         $.ajax({
             url: `/api/configs/${this.config.name}/image/${filename}`,
@@ -325,8 +325,8 @@ function makeIndex() {
 function grid() {
     $.getJSON('/api/configs', configs=> {
          let config = choose(configs);
-         config.badgeHeight = 20;
-         config.badgeWidth = 20;
+         config.badgeHeight = 28;
+         config.badgeWidth = 28;
          config.imageLeft = 0;
          config.imageRight = 1;
          config.imageTop = 0;
