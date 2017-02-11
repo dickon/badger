@@ -113,6 +113,7 @@ class Editor {
         let elems = badgeKey.split(' ');
         let id = +elems[2];
         let badge = this.badges[id];
+        if (badge.printed && !this.grid) return;
         this.badgemap[badge.id] = badge;
          $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         if (badge.filename == null) {
@@ -136,8 +137,8 @@ class Editor {
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         this.render(badge.id);
         for (var name of ['first', 'last', 'title']) {
-            let width = this.grid && name == 'last' ? 0.18 : 0.35;
-            let y = name=='first' ? (this.grid ? 0.2:0.55) : (name == 'title'? 0.91 : (this.grid?0.86:0.75) );
+            let width = this.grid && name == 'last' && this.config.name != 'c2017' ? 0.18 : 0.35;
+            let y = name=='first' ? (this.grid ? (this.config.name == 'c2017'?0.75:0.25):0.55) : (name == 'title'? 0.91 : (this.grid?0.86:0.75) );
             let text = paper.text(this.config.badgeWidth*(this.grid?0.5:0.245), this.config.badgeHeight*y, 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
@@ -153,10 +154,10 @@ class Editor {
         if (oldImage != null) oldImage.remove();
         let paper = Snap(`#badgeSvg${badgeId}`);
         if (badge.filename != null) {
-            const imLeft = this.config.imageLeft;
-            const imRight = this.config.imageRight;;
-            const imTop = this.config.imageTop;
-            const imBottom = this.config.imageBottom;
+            let imLeft = this.config.imageLeft;
+            let imRight = this.config.imageRight;
+            let imTop = this.config.imageTop;
+            let imBottom = this.config.imageBottom;
             const imXCentre = this.config.badgeWidth * (imLeft + imRight)/2;
             const imYCentre = this.config.badgeHeight * (imTop + imBottom)/2
             const portWidth = (imRight - imLeft) * this.config.badgeWidth;
@@ -168,6 +169,13 @@ class Editor {
             if (badge.right == null) badge.right = 0;
             if (badge.top == null) badge.top = 0;
             if (badge.bottom == null) badge.bottom = 0;
+            if (this.grid && this.config.name == 'c2017') {
+                badge.left = 0.25;
+                badge.right = 0.25;
+                badge.top = 0;
+                badge.bottom = 0.6;
+            }
+            console.log(`${JSON.stringify(imLeft)}`);
             const originalAspectRatio = badge.imageHeight / badge.imageWidth;
             const rotatedImageWidth = badge.rotation == 0 ? badge.imageWidth : badge.imageHeight;
             const rotatedImageHeight = badge.rotation == 0 ? badge.imageHeight : badge.imageWidth;
@@ -183,8 +191,10 @@ class Editor {
             const clippedFullWidth = ( badge.rotation == 0 ? visibleWidth * (1 + badge.left + badge.right) : visibleHeight * (1 + badge.top + badge.bottom));
             const clippedFullHeight = originalAspectRatio*clippedFullWidth;
 
-            const scale = (badge.rotation == 0) ? (clippedFullHeight < visibleHeight ? visibleHeight/clippedFullHeight : 1):
+            let scale = (badge.rotation == 0) ? (clippedFullHeight < visibleHeight ? visibleHeight/clippedFullHeight : 1):
                                                 (clippedFullWidth < visibleWidth ? visibleWidth / clippedFullHeight : 1);
+                                                console.log(`scale ${scale}`);
+            if (this.grid && this.config.name == 'c2017') scale = 2.5;
             const fullWidth = scale * clippedFullWidth;
             const fullHeight = (fullWidth * originalAspectRatio);
 
@@ -196,7 +206,7 @@ class Editor {
             if (badge.brightness != 1) {
                 im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness/2))});
             }
-            //im.transform(`r${badge.rotation}`);
+            im.transform(`r${badge.rotation}`);
             let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
                                     visibleWidth, visibleHeight).attr({fill:'#fff'});
             let group = paper.group(im);
@@ -208,6 +218,16 @@ class Editor {
 
 
     drawSpareImage(image: Image) {
+        let found = false;
+        $.map(this.badges, badge=> {
+            if (badge.filename == image.filename) {
+                console.log(`skipping ${image.filename} since in use on ${badge.first} ${badge.last}`);
+                found = true;
+            }
+        });
+        if (found) {
+            return;
+        }
         if ($.inArray(image.filename, this.spareImages) != -1) return;
         if (image.hidden == 1) return;
         this.spareImages.push(image.filename);
@@ -325,14 +345,14 @@ function makeIndex() {
 function grid() {
     $.getJSON('/api/configs', configs=> {
          let config = choose(configs);
-         config.badgeHeight = 28;
-         config.badgeWidth = 28;
+         config.badgeHeight = config.name == 'c2017' ? 24 :30;
+         config.badgeWidth = config.name == 'c2017' ? 20 : 28;
          config.imageLeft = 0;
          config.imageRight = 1;
          config.imageTop = 0;
          config.imageBottom = 1;
          
-         let editor = new Editor(config, true, true); 
+         let editor = new Editor(config, false, true); 
          editor.loadBadges(false);
     });
 }
