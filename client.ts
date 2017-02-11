@@ -111,7 +111,7 @@ class Editor {
 
     createBadge(badgeKey) {
         let elems = badgeKey.split(' ');
-        let id = +elems[2];
+        let id = +elems.slice(-1)[0];
         let badge = this.badges[id];
         if (badge.printed && !this.grid) return;
         this.badgemap[badge.id] = badge;
@@ -138,11 +138,11 @@ class Editor {
         this.render(badge.id);
         for (var name of ['first', 'last', 'title']) {
             let width = this.grid && name == 'last' && this.config.name != 'c2017' ? 0.18 : 0.35;
-            let y = name=='first' ? (this.grid ? (this.config.name == 'c2017'?0.75:0.25):0.55) : (name == 'title'? 0.91 : (this.grid?0.86:0.75) );
-            let text = paper.text(this.config.badgeWidth*(this.grid?0.5:0.245), this.config.badgeHeight*y, 
+            let y = name=='first' ? (this.grid ? (this.config.name == 'c2017'?0.75:0.25):0.75) : (name == 'title'? 0.88 : (this.grid?0.86:0.83) );
+            let text = paper.text(this.config.badgeWidth*(this.grid?0.5:(this.config.name == 'c2017' ? 0.32 : 0.245)), this.config.badgeHeight*y, 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
-            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.28:0.2)*10/bbox.height, 
+            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(0.1)*10/bbox.height, 
                                                         this.config.badgeWidth*width*10/bbox.width)}pt`});
             text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
@@ -253,7 +253,7 @@ class Editor {
         $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
             this.badges = {};
             let badgeseq = [];
-            badges.map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
+            badges.map(x=>badgeseq.push(x.title +' '+x.first+' '+x.last+' '+x.id));
             badges.map(x=> {
                 this.badges[x.id] = x;
             });
