@@ -14,6 +14,7 @@ function allowDrop(ev) {
     ev.preventDefault();
 }
 function capitalise(x) {
+    if (x.toLowerCase() != x) return x;
     if (x === undefined) return '';
     return x[0].toUpperCase() + x.substring(1);
 }
@@ -64,13 +65,15 @@ class Editor {
     lowPostfix: string;
     spareImages: string[];
     grid: boolean;
+    limit: number;
 
-    constructor(config:Config, low=false, grid=false) {
+    constructor(config:Config, low=false, grid=false, limit=-1) {
         this.config = config;
         this.badgemap = {};
         this.lowPostfix = low ? "?low=1":"";
         this.spareImages = [];
         this.grid = grid;
+        this.limit = limit;
     }
 
     drop(ev, index:number) {
@@ -113,6 +116,7 @@ class Editor {
         let elems = badgeKey.split(' ');
         let id = +elems.slice(-1)[0];
         let badge = this.badges[id];
+        if (Object.keys(this.badgemap).length >= this.limit || this.limit==-1) return;
         if (badge.printed && !this.grid) return;
         this.badgemap[badge.id] = badge;
          $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
@@ -211,8 +215,8 @@ class Editor {
                                     visibleWidth, visibleHeight).attr({fill:'#fff'});
             let group = paper.group(im);
             group.attr({mask:cliprect});
-            let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
-            g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
+            //let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
+            //g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
         }
     }
 
@@ -253,7 +257,7 @@ class Editor {
         $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
             this.badges = {};
             let badgeseq = [];
-            badges.map(x=>badgeseq.push(x.title +' '+x.first+' '+x.last+' '+x.id));
+            badges.map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
             badges.map(x=> {
                 this.badges[x.id] = x;
             });
@@ -323,7 +327,7 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(choose(configs), false); 
+         editor = new Editor(choose(configs), false, false, 1); 
          editor.loadBadges(false);
      });
 }
