@@ -13,6 +13,7 @@
   "author": "Dickon Reed",
   "license": "GPL-3.0",
   "dependencies": {
+    "async-file": "^2.0.2",
     "chokidar": "^2.0.0",
     "express": "^4.14.0",
     "image-size": "^0.5.1",
