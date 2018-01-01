@@ -18,7 +18,7 @@ import * as process from "process";
 import * as socketIo from "socket.io";
 import * as http from "http";
 import * as chokidar from "chokidar";
-import * as fs from "async-file";
+import * as afs from "async-file";
 
 let app = express();
 let server = http.createServer(app);
@@ -26,19 +26,29 @@ let io = socketIo(server);
 let low = true;
 let sizeofPromise:(path:string)=>Promise<any> = Promise.denodeify(sizeOf);
 let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
+function fail(err) {
+    console.log(`fail: ${err}`);
+    process.exit(2);
+}
 async function go(knex) {
     const knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
     console.log("starting");
     await knex.schema.createTableIfNotExists('configs', function (t) {
         t.increments('id').primary()
-        for (let sname in ['config', 'name', 'image_directory', 'background_image_file'])
+        for (let sname of ['config', 'name', 'image_directory', 'background_image_file']) 
             t.string(sname).notNullable()
-        t.number('badgeWidth').notNullable()
-        t.number('badgeHeight').notNullable()
-    })
+        t.integer('badgeWidth').notNullable()
+        t.integer('badgeHeight').notNullable()
+    }).catch(fail)
+    console.log("configs table present")
     await knex.schema.createTableIfNotExists('badges', function (t) {
-        
-    })
+        t.increments('id').primary();        
+        for (let iname of ['configId', 'left', 'right', 'bottom', 'top', 'brightness', 'contrast'])
+            t.float(iname).notNullable()
+        for (let sname of ['first', 'last', 'title', 'filename' ]) 
+            t.text(sname).notNullable()
+    }).catch(fail)
+    console.log("badges table present")
     let getImageDirectory = (req): Promise<string> => knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
     let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
     let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => {
@@ -127,7 +137,7 @@ async function go(knex) {
     app.get('/configs/:config/grid', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'grid.html')));
 
     const indexfile = path.resolve(__dirname, 'public', 'index.html')
-    const indexfileexists = fs.exists(indexfile);
+    let indexfileexists = await afs.exists(indexfile)
     if (!indexfileexists) {
         console.log(`${indexfile} not found`);
         process.exit(1);
