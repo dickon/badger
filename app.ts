@@ -31,9 +31,13 @@ async function go(knex) {
     console.log("starting");
     await knex.schema.createTableIfNotExists('configs', function (t) {
         t.increments('id').primary()
-        t.string('name').notNullable()
-        t.string('image_directory').notNullable()
-        t.string('background_image_file').notNullable()
+        for (let sname in ['config', 'name', 'image_directory', 'background_image_file'])
+            t.string(sname).notNullable()
+        t.number('badgeWidth').notNullable()
+        t.number('badgeHeight').notNullable()
+    })
+    await knex.schema.createTableIfNotExists('badges', function (t) {
+        
     })
     let getImageDirectory = (req): Promise<string> => knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
     let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
