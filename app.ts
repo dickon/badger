@@ -126,9 +126,6 @@ async function go(knex) {
             });
         });
     });
-    app.get('/js/client.js', (req, res) => res.sendFile(__dirname+'/client.js'));
-    app.get('/js/snap.js', (req, res) => res.sendFile(path.resolve(__dirname,'..','node_modules', 'snapsvg', 'dist', 'snap.svg.js')));
-    app.get('/js/jquery.min.js', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'jquery', 'dist', 'jquery.min.js')));
     app.get('/js/goldenlayout.min.js', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'dist', 'goldenlayout.min.js')));
     app.get('/css/goldenlayout-light.theme.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-light.theme.css')));
     app.get('/css/goldenlayout-base.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-base.css')));
@@ -136,13 +133,23 @@ async function go(knex) {
     app.get('/configs/:config/view', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'view.html')));
     app.get('/configs/:config/grid', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'grid.html')));
 
-    const indexfile = path.resolve(__dirname, 'public', 'index.html')
-    let indexfileexists = await afs.exists(indexfile)
-    if (!indexfileexists) {
-        console.log(`${indexfile} not found`);
-        process.exit(1);
+    for (let item of [
+        {path:'public/index.html', route:'/'}, 
+        {path:'client.js', route: '/js/client.js'}, 
+        {path:'node_modules/snapsvg/dist/snap.svg.js', route:'/js/snap.js'},
+        {path:'node_modules/jquery/dist/jquery.min.js', route:'/js/jquery.min.js'}]) {
+        const filename = __dirname + "/" +item.path
+        console.log(
+            `checking for ${filename}`)
+        let filenameexists = await afs.exists(filename)
+        if (!filenameexists) {
+            console.log(`${filename} not found for {item.route}`);
+            process.exit(1);
+        } else {
+            console.log(`found ${filename}`)
+        }
+        app.get(item.route, (req, res) => res.sendFile(filename))
     }
-    app.get('/', (req, res) => res.sendFile(indexfile))
 
     console.log("running");
     server.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
@@ -172,4 +179,5 @@ async function go(knex) {
     });
     console.log("finished");
 }
-go()
+go().catch(fail)
+
