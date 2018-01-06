@@ -30,7 +30,7 @@ async function go() {
     console.log("starting");
     await knex.schema.createTableIfNotExists('configs', function (t) {
         t.increments('id').primary()
-        for (let sname of ['config', 'name', 'image_directory', 'background_image_file']) 
+        for (let sname of ['name', 'image_directory', 'background_image_file']) 
             t.string(sname).notNullable()
         t.integer('badgeWidth').notNullable()
         t.integer('badgeHeight').notNullable()
