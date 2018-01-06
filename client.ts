@@ -1,5 +1,6 @@
 interface XML1HttpRequest {}
 var GoldenLayout: any;
+var io: any;
 let DEBUG = false;
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
@@ -110,11 +111,14 @@ class Editor {
 
     createBadge(badgeKey) {
         let elems = badgeKey.split(' ');
+        console.log(`badge elements ${elems}`);
         let id = +elems.slice(-1)[0];
         let badge = this.badges[id];
-        if (Object.keys(this.badgemap).length >= this.limit || this.limit==-1) return;
-        if (badge.printed && !this.grid) return;
+        console.log(`badge ${JSON.stringify(badge)} grid ${this.grid} limit ${this.limit}`);
+        if (Object.keys(this.badgemap).length >= this.limit && this.limit!=-1) return;
+        if (badge.printed === 1  && !this.grid) return;
         this.badgemap[badge.id] = badge;
+        console.log(`appending`);
          $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         if (badge.filename == null) {
             this.processBadge(badge);
@@ -167,6 +171,7 @@ class Editor {
     }
 
     render(badgeId) {
+        console.log(`rendering ${badgeId}`);
         let badge = this.badgemap[badgeId];
         let oldImage=Snap(`#badgeImage${badgeId}`);
         if (oldImage != null) oldImage.remove();
@@ -254,9 +259,11 @@ class Editor {
             console.log(`badge background size ${JSON.stringify(badgeSize)}`)
             $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
                 console.log(`got ${badges.length} badges`)
+                badges.map(x=> console.log(`badge ${JSON.stringify(x)}`));
                 this.badges = {};
                 let badgeseq = [];
-                badges.filter(x=>x.printed == 0).map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
+                badges.filter(x=>x.printed == 0 || x.printed === null).map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
+                console.log(`badgeseq = ${badgeseq.length}`);
                 badges.map(x=> {
                     this.badges[x.id] = x;
                 });
