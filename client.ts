@@ -268,7 +268,7 @@ class Editor {
                                 this.drawSpareImage(image);
                         }));
                 }
-            });
+            }).fail(x=>console.log(' badge error '+JSON.stringify(x)))
         });
     }
 }
