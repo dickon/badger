@@ -86,7 +86,11 @@ class Editor {
                 let badge = this.badges[index];
                 badge.filename = data;
                 this.sizeBadge(badge);
-            }
+            },
+            error: function(XMLHttpRequest, textStatus, errorThrown) { 
+                alert("Status: " + textStatus); 
+                alert("Error: " + errorThrown); 
+            }   
         });
     }
 
