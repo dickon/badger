@@ -173,6 +173,7 @@ class Editor {
     render(badgeId) {
         console.log(`rendering ${badgeId}`);
         let badge = this.badgemap[badgeId];
+        console.log(`badge ${JSON.stringify(badge)}`);
         let oldImage=Snap(`#badgeImage${badgeId}`);
         if (oldImage != null) oldImage.remove();
         let paper = Snap(`#badgeSvg${badgeId}`);
@@ -196,11 +197,12 @@ class Editor {
         const rotatedImageWidth = badge.rotation == 0 ? badge.imageWidth : badge.imageHeight;
         const rotatedImageHeight = badge.rotation == 0 ? badge.imageHeight : badge.imageWidth;
         const rotatedAspectRatio = rotatedImageHeight / rotatedImageWidth;
+        console.log(`badge image width=${badge.imageWidth} image height=${badge.imageHeight} badge top=${badge.top} bottom=${badge.bottom} left=${badge.left} right=${badge.right}`);
         const clipBoxRatio = (1-badge.top-badge.bottom) / (1-badge.right-badge.left);
         const clippedRatio = rotatedAspectRatio * clipBoxRatio;
 
         const hfit = clippedRatio < portRatio;
-
+    
         const visibleWidth = hfit ?  portWidth                : portHeight / clippedRatio;
         const visibleHeight = hfit ?  portWidth*clippedRatio  : portHeight;
 
@@ -221,6 +223,7 @@ class Editor {
         if (badge.brightness != 1)
              im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
         im.transform(`r${badge.rotation}`);
+        console.log(`hfit=${hfit} portwidth=${portWidth} portheight=${portHeight} clippedRatio=${clippedRatio} visiblerwidth=${visibleWidth} visibleheight=${visibleHeight}`);
         let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
                                 visibleWidth, visibleHeight).attr({fill:'#fff'});
         let group = paper.group(im);
