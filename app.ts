@@ -44,6 +44,17 @@ async function go() {
             t.text(sname).notNullable()
     }).catch(fail)
     console.log("badges table present")
+    
+    await knex.schema.createTableIfNotExists('images', function (t) {
+        t.increments('id').primary();        
+        t.integer('configId').notNullable();
+        for (let iname of ['left', 'right', 'bottom', 'top', 'brightness', 'contrast', 'rotation'])
+            t.float(iname).notNullable()
+        for (let sname of ['filename', 'recentFirst', 'recentLast', 'recentTitle' ]) 
+            t.text(sname).notNullable()
+        t.boolean('hidden').notNullable()
+    }).catch(fail)
+    console.log("images table present")
     let getImageDirectory = (req)=> knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
     let getBackgroundImageFile = (req) => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
     let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => {
