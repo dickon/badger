@@ -15,8 +15,6 @@ import * as process from "process";
 import * as socketIo from "socket.io";
 import * as http from "http";
 import * as chokidar from "chokidar";
-//import * as afs from "async-file";
-
 let app = express();
 let server = http.createServer(app);
 let io = socketIo(server);
@@ -132,10 +130,10 @@ async function go() {
 
     for (let item of [
         {path:'public/index.html', route:'/'}, 
-        {path:'client.js', route: '/js/client.js'}, 
+        {path:'build/client.js', route: '/js/client.js'}, 
         {path:'node_modules/snapsvg/dist/snap.svg.js', route:'/js/snap.js'},
         {path:'node_modules/jquery/dist/jquery.min.js', route:'/js/jquery.min.js'}]) {
-        const filename = __dirname + "/" +item.path
+        const filename = path.join(__dirname , "..", item.path)
         console.log(
             `checking for ${filename}`)
         let filenameexists = fs.existsSync(filename)
