@@ -63,7 +63,7 @@ async function go() {
         }));        
 
     jsonGet('/api/configs', req => knex.select('*').from('configs'));
-    jsonGet('/api/configs/:config/§', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
+    jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
                 .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast', 'printed').where('configs.name', req.params.config));
     jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
     app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
@@ -72,6 +72,7 @@ async function go() {
         if (match == null) res.status(500).send({error:'bad image name'}); 
         else {
             let fullres = path.resolve(i, req.params.image);
+            console.log(`full res ${fullres} image {res.params.image}`);
             let lowres = path.resolve(i, req.params.image+'.512.jpg');
             let complete = () => res.sendFile(low?lowres:fullres);
             if (!low) return complete();
@@ -133,15 +134,17 @@ async function go() {
         });
     });
     app.get('/js/goldenlayout.min.js', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'dist', 'goldenlayout.min.js')));
-    app.get('/css/goldenlayout-light.theme.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-light.theme.css')));
-    app.get('/css/goldenlayout-base.css',(req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'src', 'css', 'goldenlayout-base.css')));
     app.get('/configs/:config/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
-    app.get('/configs/:config/view', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'view.html')));
-    app.get('/configs/:config/grid', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'grid.html')));
 
     for (let item of [
         {path:'public/index.html', route:'/'}, 
+        {path:'public/compose.html', route:'/configs/:config/compose'}, 
+        {path:'public/view.html', route:'/configs/:config/view'}, 
+        {path:'public/grid.html', route:'/configs/:config/grid'}, 
+        {path:'public/index.html', route:'/'}, 
         {path:'build/client.js', route: '/js/client.js'}, 
+        {path:'node_modules/golden-layout/src/css/goldenlayout-light-theme.css', route: '/css/goldenlayout-light-theme.css'},
+        {path:'node_modules/golden-layout/src/css/goldenlayout-base.css', route: '/css/goldenlayout-base.css'},
         {path:'node_modules/snapsvg/dist/snap.svg.js', route:'/js/snap.js'},
         {path:'node_modules/jquery/dist/jquery.min.js', route:'/js/jquery.min.js'}]) {
         const filename = path.join(__dirname , "..", item.path)
