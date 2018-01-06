@@ -172,7 +172,7 @@ async function go() {
                 let coverage = n['count(*)'];
                 if (coverage==0) {
                     console.log(`inserting ${filename} on ${configId}`)
-                    knex('images').insert({filename:filename, hidden:0, configId:configId, left:0, right:1, top:0, bottom:1, brightness:0, contrast:0, rotation:0, recentFirst:"", recentLast:"", recentTitle:""}).then(x=>{ 
+                    knex('images').insert({filename:filename, hidden:0, configId:configId, left:0, right:0, top:0, bottom:0, brightness:1, contrast:1, rotation:0, recentFirst:"", recentLast:"", recentTitle:""}).then(x=>{ 
                         knex('images').where('filename', filename).where('configId', configId).first().then(image=> io.sockets.emit('newImage', filename));
                     });
                 }
