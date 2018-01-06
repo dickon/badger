@@ -119,12 +119,13 @@ async function go() {
         else res.sendFile(f);
     }));
     app.get('/api/configs/:config/background/size', (req, res) => getBackgroundImageFile(req).then(sizeofPromise).then(dimensions => res.json(dimensions)));
-    app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => 
+    app.put('/api/configs/:config/badges/:badgeId/image/:filename', (req, res) => {
         knex('badges').where('id', '=', parseInt(req.params.badgeId)).update({filename: req.params.filename}).then(x=> {
             knex('badges').where('id', '=', parseInt(req.params.badgeId)).first().then( badge=> {
                 knex('images').where({filename: req.params.filename, configId:badge.configId}).update({recentFirst:badge.first, recentLast:badge.last, recentTitle:badge.title}).then(z=>res.json(x));
             });
-        }));
+        });
+    });
     app.delete('/api/configs/:config/image/:filename', (req, res) => {
         knex.select('id').from('configs').where('name', req.params.config).first().pluck('id').then((configIds:number[])=> {
             let q= {filename:req.params.filename, configId:configIds[0]};
