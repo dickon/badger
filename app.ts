@@ -1,6 +1,3 @@
-/// <reference path="typings/globals/node/index.d.ts" />
-/// <reference path="typings/modules/bluebird/index.d.ts" />
-
 // TODO: remove this hack and get the es6 declarations in place properly
 interface String {
     endsWith(searchString: string, endPosition?: number): boolean;
@@ -13,24 +10,24 @@ import * as path from "path";
 import * as child_process from "child_process";
 import * as sizeOf from "image-size";
 import * as client from "knex";
-import * as Promise from "promise";
+import * as promise from "promise";
 import * as process from "process";
 import * as socketIo from "socket.io";
 import * as http from "http";
 import * as chokidar from "chokidar";
-import * as afs from "async-file";
+//import * as afs from "async-file";
 
 let app = express();
 let server = http.createServer(app);
 let io = socketIo(server);
 let low = true;
-let sizeofPromise:(path:string)=>Promise<any> = Promise.denodeify(sizeOf);
-let readdir:(path:string)=>Promise<string[]> = Promise.denodeify(fs.readdir);
+let sizeofPromise = promise.denodeify(sizeOf);
+let readdir = promise.denodeify(fs.readdir);
 function fail(err) {
     console.log(`fail: ${err}`);
     process.exit(2);
 }
-async function go(knex) {
+async function go() {
     const knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
     console.log("starting");
     await knex.schema.createTableIfNotExists('configs', function (t) {
@@ -49,8 +46,8 @@ async function go(knex) {
             t.text(sname).notNullable()
     }).catch(fail)
     console.log("badges table present")
-    let getImageDirectory = (req): Promise<string> => knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
-    let getBackgroundImageFile = (req): Promise<string> => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
+    let getImageDirectory = (req)=> knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
+    let getBackgroundImageFile = (req) => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
     let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => {
         console.log(`query error ${err}`);
         res.status(500).send({error:err});
@@ -141,7 +138,7 @@ async function go(knex) {
         const filename = __dirname + "/" +item.path
         console.log(
             `checking for ${filename}`)
-        let filenameexists = await afs.exists(filename)
+        let filenameexists = fs.existsSync(filename)
         if (!filenameexists) {
             console.log(`${filename} not found for {item.route}`);
             process.exit(1);
@@ -155,14 +152,14 @@ async function go(knex) {
     server.listen(3000, () => console.log(`listening on ${server.address().port}`)); 
     console.log("listening");
 
-    function considerImage(filename:String, configId: number) {
+    function considerImage(filename:string, configId: number) {
         let lf:String = filename.toLowerCase();
         if (lf.endsWith('.jpg') && !lf.endsWith('.512.jpg')&& !lf.endsWith('.work.jpg')) {
             knex('images').where({filename: filename, configId: configId}).count().first().then(n=> {
                 let coverage = n['count(*)'];
                 if (coverage==0) {
                     knex('images').insert({filename:filename, hidden:0, configId:configId}).then(x=>{ 
-                        knex('images').where('filename', filename).where('configId', configId).first().then((image:Image)=> io.sockets.emit('newImage', image));
+                        knex('images').where('filename', filename).where('configId', configId).first().then(image=> io.sockets.emit('newImage', image));
                     });
                 }
             });
