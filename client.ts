@@ -251,7 +251,9 @@ class Editor {
 
     loadBadges(spare=true) {
         $.getJSON(`/api/configs/${this.config.name}/background/size`, badgeSize=> {
+            console.log(`badge background size ${JSON.stringify(badgeSize)}`)
             $.getJSON(`/api/configs/${this.config.name}/badges`, (badges: any[])=> {
+                console.log(`got ${badges.length} badges`)
                 this.badges = {};
                 let badgeseq = [];
                 badges.filter(x=>x.printed == 0).map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
@@ -272,7 +274,7 @@ class Editor {
                     });
                 }
             }).fail(x=>console.log(' badge error '+JSON.stringify(x)))
-        });
+        }).fail(x=>console.log(' get background size error '+x))
     }
 }
 
