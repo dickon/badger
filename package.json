@@ -19,6 +19,7 @@
     "chokidar": "^2.0.0",
     "express": "^4.14.0",
     "fs": "0.0.1-security",
+    "golden-layout": "^1.5.9",
     "image-size": "^0.5.1",
     "jquery": "^3.2.1",
     "knex": "^0.12.6",
