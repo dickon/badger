@@ -1,7 +1,3 @@
-/// <reference path="typings/globals/jquery/index.d.ts" />
-/// <reference path="typings/globals/snapsvg/index.d.ts" />
-/// <reference path="typings/globals/socket.io-client/index.d.ts" />
-
 interface XMLHttpRequest {}
 var GoldenLayout: any;
 let DEBUG = false;
