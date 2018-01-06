@@ -134,7 +134,7 @@ async function go() {
                 knex('images').where(q).then(x=>res.json(x));
             });
         });
-    });
+    });  
     app.get('/js/goldenlayout.min.js', (req, res) => res.sendFile(path.resolve(__dirname, '..', 'node_modules', 'golden-layout', 'dist', 'goldenlayout.min.js')));
     app.get('/configs/:config/compose', (req,res) => res.sendFile(path.resolve(__dirname, '..', 'public', 'compose.html')));
 
