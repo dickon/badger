@@ -228,13 +228,13 @@ class Editor {
             paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
             paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.4pt', fill:'white'});
         }
-        if ($.inArray(image.filename, this.spareImages) != -1) return;
-        if (image.hidden == 1) return;
-        this.spareImages.push(image.filename);
-        let index = this.spareImages.length;
-        $('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="editor.closeSpareImage('${image.filename}',${index})").remove();">X</button></span></div>`+
-                                `<IMG draggable="true"  ondragstart="imageDrag(event, '${image.filename}')" `+
-                                `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
+        //if ($.inArray(image.filename, this.spareImages) != -1) return;
+        //if (image.hidden == 1) return;
+        //this.spareImages.push(image.filename);
+        //let index = this.spareImages.length;
+        //$('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="editor.closeSpareImage('${image.filename}',${index})").remove();">X</button></span></div>`+
+        //                        `<IMG draggable="true"  ondragstart="imageDrag(event, '${image.filename}')" `+
+        //                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
     }
 
     closeSpareImage(filename:string, index: number) {
@@ -262,11 +262,14 @@ class Editor {
                 badgeseq.map(x=>this.createBadge(x));
                 if (badgeseq.length != 0) this.select(+(badgeseq[0].split(' ')[2]));
                 if (spare) {
-                    $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
+                    $.getJSON(`/api/configs/${this.config.name}/images`, images=> {
+                        console.log(`got ${images.length} images`);
                         images.map(image=> {
+                            console.log(`got image ${image}`);
                             if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
                                 this.drawSpareImage(image);
-                        }));
+                        });
+                    });
                 }
             }).fail(x=>console.log(' badge error '+JSON.stringify(x)))
         });
