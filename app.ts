@@ -38,7 +38,7 @@ async function go() {
     console.log("configs table present")
     await knex.schema.createTableIfNotExists('badges', function (t) {
         t.increments('id').primary();        
-        for (let iname of ['configId', 'left', 'right', 'bottom', 'top', 'brightness', 'contrast'])
+        for (let iname of ['configId', 'left', 'right', 'bottom', 'top', 'brightness', 'contrast', 'rotation'])
             t.float(iname).notNullable()
         for (let sname of ['first', 'last', 'title', 'filename' ]) 
             t.text(sname).notNullable()
@@ -63,7 +63,7 @@ async function go() {
         }));        
 
     jsonGet('/api/configs', req => knex.select('*').from('configs'));
-    jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
+    jsonGet('/api/configs/:config/§', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id')
                 .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'badges.rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast', 'printed').where('configs.name', req.params.config));
     jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
     app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
@@ -167,7 +167,8 @@ async function go() {
             knex('images').where({filename: filename, configId: configId}).count().first().then(n=> {
                 let coverage = n['count(*)'];
                 if (coverage==0) {
-                    knex('images').insert({filename:filename, hidden:0, configId:configId}).then(x=>{ 
+                    console.log(`inserting ${filename} on ${configId}`)
+                    knex('images').insert({filename:filename, hidden:0, configId:configId, left:0, right:1, top:0, bottom:1, brightness:0, contrast:0, rotation:0, recentFirst:"", recentLast:"", recentTitle:""}).then(x=>{ 
                         knex('images').where('filename', filename).where('configId', configId).first().then(image=> io.sockets.emit('newImage', image));
                     });
                 }
