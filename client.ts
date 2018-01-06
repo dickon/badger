@@ -1,4 +1,4 @@
-interface XMLHttpRequest {}
+interface XML1HttpRequest {}
 var GoldenLayout: any;
 let DEBUG = false;
 function imageDrag(ev, image) {
@@ -222,7 +222,7 @@ class Editor {
             paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
             paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.4pt', fill:'white'});
         }
-        if ($.inArray(image.filename, this.spareImages) != -1) return;
+        if ($.inArray(im.filename, this.spareImages) != -1) return;
         if (image.hidden == 1) return;
         this.spareImages.push(image.filename);
         let index = this.spareImages.length;
@@ -337,6 +337,7 @@ function view() {
 }
 
 function makeIndex() {
+    console.log("make index starting");
     $.getJSON('/api/configs', configs=> {
         $('body').append($('<h1>').append('Badger'));
         configs.map(x=> {
