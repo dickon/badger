@@ -143,6 +143,12 @@ class Editor {
         });
     }
 
+    drawSpareImage(image) {
+        $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
+        `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
+        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`)
+    }
+
     processBadge(badge) {
        
         let paper = Snap(`#badgeSvg${badge.id}`);
@@ -254,28 +260,15 @@ class Editor {
                 });
                 badgeseq.sort();
                 badgeseq.map(x=>this.createBadge(x));
-                this.select(+(badgeseq[0].split(' ')[2]));
+                if (badgeseq.length != 0) this.select(+(badgeseq[0].split(' ')[2]));
                 if (spare) {
                     $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
                         images.map(image=> {
                             if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0)
-                                $('#spareImages').append(`<div  class="imagefile"><div class="filename">${image}</div>`+
-                                                        `<IMG draggable="true"  ondragstart="imageDrag(event, '${image}')" `+
-                                                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`);
+                                this.drawSpareImage(image);
                         }));
                 }
             });
-            badgeseq.sort();
-            badgeseq.map(x=>this.createBadge(x));
-            if (badgeseq.length != 0) this.select(+(badgeseq[0].split(' ')[2]));
-            if (spare) {
-                $.getJSON(`/api/configs/${this.config.name}/images`, images=> 
-                    images.map((image:Image)=> {
-                        if (Object.keys(this.badges).filter(b => this.badges[b].filename == image).length == 0) {
-                            this.drawSpareImage(image);
-                        }
-                    }));
-            }
         });
     }
 }
