@@ -72,7 +72,7 @@ async function go() {
         if (match == null) res.status(500).send({error:'bad image name'}); 
         else {
             let fullres = path.resolve(i, req.params.image);
-            console.log(`full res ${fullres} image {res.params.image}`);
+            console.log(`full res ${fullres} image ${req.params.image}`);
             let lowres = path.resolve(i, req.params.image+'.512.jpg');
             let complete = () => res.sendFile(low?lowres:fullres);
             if (!low) return complete();
