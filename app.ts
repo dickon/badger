@@ -42,6 +42,7 @@ async function go() {
             t.float(iname).notNullable()
         for (let sname of ['first', 'last', 'title', 'filename' ]) 
             t.text(sname).notNullable()
+        t.boolean('printed');
     }).catch(fail)
     console.log("badges table present")
     
