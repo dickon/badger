@@ -38,8 +38,8 @@ async function go() {
     console.log("configs table present")
     await knex.schema.createTableIfNotExists('badges', function (t) {
         t.increments('id').primary();        
-        for (let iname of ['configId', 'left', 'right', 'bottom', 'top', 'brightness', 'contrast', 'rotation'])
-            t.float(iname).notNullable()
+        for (let iname of ['configId'])
+            t.integer(iname).notNullable()
         for (let sname of ['first', 'last', 'title', 'filename' ]) 
             t.text(sname).notNullable()
         t.boolean('printed');
