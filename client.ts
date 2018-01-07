@@ -162,6 +162,8 @@ class Editor {
         for (var name of ['first', 'last', 'title']) {
             let width = this.grid && name == 'last' && this.config.name != 'c2017' ? 0.18 : 0.35;
             let y = name=='first' ? (this.grid ? (this.config.name == 'c2017'?0.75:0.25):0.75) : (name == 'title'? 0.88 : (this.grid?0.86:0.83) );
+            let paper = Snap(`#badgeSvg${badge.id}`);
+
             let text = paper.text(this.config.badgeWidth*(this.grid?0.5:(this.config.name == 'c2017' ? 0.32 : 0.245)), this.config.badgeHeight*y, 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
@@ -228,25 +230,28 @@ class Editor {
         const imagePositionLeft = imXCentre-fullWidth*(badge.left - badge.right + 1)/2;  
         const imagePositionTop = imYCentre-fullHeight*(badge.top - badge.bottom +1)/2;
         if (DEBUG) paper.rect(imLeft*this.config.badgeWidth, imTop*this.config.badgeHeight, (imRight-imLeft)*this.config.badgeWidth, (imBottom-imTop)*this.config.badgeHeight).attr({fill:'red'});
-        let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
-                 imagePositionLeft, imagePositionTop, fullWidth, fullHeight);
-        if (badge.brightness == null) badge.brightness = 1.0;
-        if (badge.brightness != 1)
-             im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
-        im.transform(`r${badge.rotation}`);
-        console.log(`hfit=${hfit} portwidth=${portWidth} portheight=${portHeight} clippedRatio=${clippedRatio} visiblerwidth=${visibleWidth} visibleheight=${visibleHeight}`);
-        let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
-                                visibleWidth, visibleHeight).attr({fill:'#fff'});
-        let group = paper.group(im);
-        group.attr({mask:cliprect});
-        let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
-        g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
-        if (DEBUG)  {
-            paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
-            paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
-            paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
-            paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.4pt', fill:'white'});
+        if (badge.filename != null) {
+            let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
+                    imagePositionLeft, imagePositionTop, fullWidth, fullHeight);
+            if (badge.brightness == null) badge.brightness = 1.0;
+            if (badge.brightness != 1)
+                im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
+            im.transform(`r${badge.rotation}`);
+            console.log(`hfit=${hfit} portwidth=${portWidth} portheight=${portHeight} clippedRatio=${clippedRatio} visiblerwidth=${visibleWidth} visibleheight=${visibleHeight}`);
+            let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
+                                    visibleWidth, visibleHeight).attr({fill:'#fff'});
+            let group = paper.group(im);
+            group.attr({mask:cliprect});
+            let g2 = paper.group(group).attr({id:`badgeImage${badgeId}`});
+            g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
+            if (DEBUG)  {
+                paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
+                paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
+                paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
+                paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.4pt', fill:'white'});
+            }
         }
+        
         //if ($.inArray(image.filename, this.spareImages) != -1) return;
         //if (image.hidden == 1) return;
         //this.spareImages.push(image.filename);
