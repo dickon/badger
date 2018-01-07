@@ -164,8 +164,8 @@ class Editor {
         let paper = Snap(`#badgeSvg${badgeId}`);
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
 
-        const imLeft = 0.45;
-        const imRight = 0.98;
+        const imLeft = 0.05;
+        const imRight = 0.55;
         const imTop = 0.025;
         const imBottom = 0.975;
         const imXCentre = this.config.badgeWidth * (imLeft + imRight)/2;
