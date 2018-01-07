@@ -40,9 +40,10 @@ async function go() {
         t.increments('id').primary();        
         for (let iname of ['configId'])
             t.integer(iname).notNullable()
-        for (let sname of ['first', 'last', 'title', 'filename' ]) 
+        for (let sname of ['first', 'last', 'title' ]) 
             t.text(sname).notNullable()
-        t.boolean('printed');
+        t.text(filename)
+        t.boolean('printed')
     }).catch(fail)
     console.log("badges table present")
     
