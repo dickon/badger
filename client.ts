@@ -123,7 +123,6 @@ class Editor {
         if (badge.printed === 1  && !this.grid) return;
         this.badgemap[badge.id] = badge;
         console.log(`appending`);
-         $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         if (badge.filename == null) {
             this.processBadge(badge);
         } else {
@@ -131,13 +130,14 @@ class Editor {
         }
     }
 
+    // called to display a badge that has an image
     sizeBadge(badge) {
         $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size${this.lowPostfix}`, imageSize => {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
-            $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
+            this.render(badge.id);
             let paper = Snap(`#badgeSvg${badge.id}`);
-            paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
+            console.log(`setting foreground image on badge ${badge.id}`);
             for (var name of ['first', 'last', 'title']) {
                 let text = paper.text(this.config.badgeWidth*0.245, this.config.badgeHeight*(name=='first' ? 0.58 : (name == 'title'? 0.91 : 0.77 )), 
                     capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
@@ -147,7 +147,6 @@ class Editor {
                                                          this.config.badgeWidth*0.35*10/bbox.width)}pt`});
                 text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
             }           
-            this.render(badge.id);
         });
     }
 
@@ -157,10 +156,8 @@ class Editor {
         `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`)
     }
 
+    // called to display a badge where there's no image specified
     processBadge(badge) {
-       
-        let paper = Snap(`#badgeSvg${badge.id}`);
-        if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         this.render(badge.id);
         for (var name of ['first', 'last', 'title']) {
             let width = this.grid && name == 'last' && this.config.name != 'c2017' ? 0.18 : 0.35;
@@ -175,12 +172,22 @@ class Editor {
     }
 
     render(badgeId) {
-        console.log(`rendering ${badgeId}`);
         let badge = this.badgemap[badgeId];
+        console.log(`rendering ${badgeId} ${badge.first} ${badge.last}`);
         console.log(`badge ${JSON.stringify(badge)}`);
         let oldImage=Snap(`#badgeImage${badgeId}`);
         if (oldImage != null) oldImage.remove();
+        let oldBadge = $(`#badge${badgeId}`).first();
+        if (oldBadge) {
+            console.log(`found element`);
+            oldBadge.remove();
+        } else {
+            console.log(`no badge found in DOM with id ${badgeId}`);
+        }
+        $('#badges').append(`<span class="badgeContainer" id="badge${badge.id}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         let paper = Snap(`#badgeSvg${badgeId}`);
+        if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
+
         const imLeft = 0.45;
         const imRight = 0.98;
         const imTop = 0.025;
@@ -261,6 +268,8 @@ class Editor {
     }
 
 
+    // significnt entry point called from all 3 current view modes;
+    // downloads all the badge data.
     loadBadges(spare=true) {
         $.getJSON(`/api/configs/${this.config.name}/background/size`, badgeSize=> {
             console.log(`badge background size ${JSON.stringify(badgeSize)}`)
