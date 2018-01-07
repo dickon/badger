@@ -124,7 +124,7 @@ class Editor {
         this.badgemap[badge.id] = badge;
         console.log(`appending`);
         if (badge.filename == null) {
-            this.processBadge(badge);
+            this.render(badge.id);
         } else {
             this.sizeBadge(badge);
         }
@@ -136,17 +136,6 @@ class Editor {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
             this.render(badge.id);
-            let paper = Snap(`#badgeSvg${badge.id}`);
-            console.log(`setting foreground image on badge ${badge.id}`);
-            for (var name of ['first', 'last', 'title']) {
-                let text = paper.text(this.config.badgeWidth*0.245, this.config.badgeHeight*(name=='first' ? 0.58 : (name == 'title'? 0.91 : 0.77 )), 
-                    capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
-                let bbox = text.getBBox();
-                //text.transform(`S(${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)/bbox.height, this.config.badgeWidth*0.35/bbox.width)})`);
-                text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
-                                                         this.config.badgeWidth*0.35*10/bbox.width)}pt`});
-                text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
-            }           
         });
     }
 
@@ -156,22 +145,7 @@ class Editor {
         `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`)
     }
 
-    // called to display a badge where there's no image specified
-    processBadge(badge) {
-        this.render(badge.id);
-        for (var name of ['first', 'last', 'title']) {
-            let width = this.grid && name == 'last' && this.config.name != 'c2017' ? 0.18 : 0.35;
-            let y = name=='first' ? (this.grid ? (this.config.name == 'c2017'?0.75:0.25):0.75) : (name == 'title'? 0.88 : (this.grid?0.86:0.83) );
-            let paper = Snap(`#badgeSvg${badge.id}`);
-
-            let text = paper.text(this.config.badgeWidth*(this.grid?0.5:(this.config.name == 'c2017' ? 0.32 : 0.245)), this.config.badgeHeight*y, 
-                capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
-            let bbox = text.getBBox();
-            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(0.1)*10/bbox.height, 
-                                                        this.config.badgeWidth*width*10/bbox.width)}pt`});
-            text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
-        }           
-    }
+  
 
     render(badgeId) {
         let badge = this.badgemap[badgeId];
@@ -259,6 +233,17 @@ class Editor {
         //$('#spareImages').append(`<div  class="imagefile" id="imagefile${index}"><div class="imagecaption"><span class="filename">${image.filename}</span><span class="close"><button class="close" onclick="editor.closeSpareImage('${image.filename}',${index})").remove();">X</button></span></div>`+
         //                        `<IMG draggable="true"  ondragstart="imageDrag(event, '${image.filename}')" `+
         //                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
+
+        for (var name of ['first', 'last', 'title']) {
+            let text = paper.text(this.config.badgeWidth*0.245, this.config.badgeHeight*(name=='first' ? 0.58 : (name == 'title'? 0.91 : 0.77 )), 
+                capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
+            let bbox = text.getBBox();
+            //text.transform(`S(${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)/bbox.height, this.config.badgeWidth*0.35/bbox.width)})`);
+            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
+                                                     this.config.badgeWidth*0.35*10/bbox.width)}pt`});
+            text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+        }           
+
     }
 
     closeSpareImage(filename:string, index: number) {
