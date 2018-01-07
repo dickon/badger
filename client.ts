@@ -235,12 +235,11 @@ class Editor {
         //                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
 
         for (var name of ['first', 'last', 'title']) {
-            let text = paper.text(this.config.badgeWidth*0.245, this.config.badgeHeight*(name=='first' ? 0.58 : (name == 'title'? 0.91 : 0.77 )), 
+            let text = paper.text(this.config.badgeWidth*0.775, this.config.badgeHeight*(name=='first' ? 0.28 : (name == 'title'? 0.61 : 0.47 )), 
                 capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
-            //text.transform(`S(${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)/bbox.height, this.config.badgeWidth*0.35/bbox.width)})`);
             text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
-                                                     this.config.badgeWidth*0.35*10/bbox.width)}pt`});
+                                                     this.config.badgeWidth*0.2*10/bbox.width)}pt`});
             text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
 
