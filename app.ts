@@ -42,7 +42,7 @@ async function go() {
             t.integer(iname).notNullable()
         for (let sname of ['first', 'last', 'title' ]) 
             t.text(sname).notNullable()
-        t.text(filename)
+        t.text('filename')
         t.boolean('printed')
     }).catch(fail)
     console.log("badges table present")
@@ -65,7 +65,7 @@ async function go() {
         }));        
 
     jsonGet('/api/configs', req => knex.select('*').from('configs'));
-    jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').join('images', 'images.filename', '=', 'badges.filename')
+    jsonGet('/api/configs/:config/badges', req => knex('badges').join('configs', 'badges.configId', '=', 'configs.id').leftOuterJoin('images', 'images.filename', '=', 'badges.filename')
                 .select('first', 'last', 'title', 'badges.id', 'badges.filename', 'rotation', 'left', 'top', 'right', 'bottom', 'brightness', 'contrast', 'printed').where('configs.name', req.params.config));
     jsonGet('/api/configs/:config/images', req => getImageDirectory(req).then(i=>readdir(i)).then(items=>items.filter(x=>x.toLowerCase().endsWith('.jpg') && !x.match(/.*tmp.jpg/) && !x.toLowerCase().endsWith('.512.jpg'))));
     app.get('/api/configs/:config/image/:image', (req, res) => getImageDirectory(req).then(i=> {
