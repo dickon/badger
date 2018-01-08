@@ -139,7 +139,7 @@ class Editor {
         $.getJSON(`/api/configs/${this.config.name}/image/${badge.filename}/size${this.lowPostfix}`, imageSize => {
             badge.imageWidth = imageSize.width;
             badge.imageHeight = imageSize.height;
-            this.render(badge.id);
+            this.render(badge);
         });
     }
 
