@@ -97,8 +97,9 @@ class Editor {
     }
 
     select(badgeId) {
-        // console.log(`selected ${badgeId}`);       
-        // let badge = this.badgemap[badgeId];
+        console.log(`selected ${badgeId}`);       
+        let badge = this.badgemap[badgeId];
+        console.log(`selected ${badge.first} ${badge.last}`);
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
         // const paper = Snap(`#editorImage`);
@@ -149,10 +150,14 @@ class Editor {
         `class="thumbnail" src="/api/configs/${this.config.name}/image/${image}${this.lowPostfix}"/></div>`)
     } 
 
+    getHandle(badge:Badge):string {
+        return `badge${badge.first}_${badge.last}_${badge.id}`;
+    }
+
     render(badge:Badge) {
         console.log(`rendering ${badge.id} ${badge.first} ${badge.last}`);
         console.log(`badge ${JSON.stringify(badge)}`);
-        let handle = `badge${badge.first}_${badge.last}_${badge.id}`;
+        let handle = this.getHandle(badge);
         let oldBadge = $(`#${handle}`).first();
         if (oldBadge) {
             console.log(`found old bage element element`);
