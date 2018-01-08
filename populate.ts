@@ -1,5 +1,6 @@
 import * as client from "knex";
 import * as fs from "fs";
+import * as process from "process";
 
 let knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
 
@@ -21,5 +22,6 @@ knex.select('*').from('configs').first().then(config=> {
             }
         });
     });
+    process.exit(0);
 });
 
