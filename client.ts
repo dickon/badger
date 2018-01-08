@@ -103,6 +103,13 @@ class Editor {
         let handle = this.getHandle(badge);
         $('.badgeContainer').removeClass('highlight');
         $(`#${handle}`).addClass('highlight');
+        $(`#controlbadge`).text(`${badge.first} ${badge.last}`);
+        $('input[type=range]').on('input', function () {
+            let control = $(this);
+            let controlid = $(this).attr('id').substr('control'.length);
+            badge[controlid] = control.val();
+            editor.render(badge);
+        });
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
         // const paper = Snap(`#editorImage`);
@@ -349,6 +356,8 @@ function compose() {
         <span>Right: <input type="range" id="controlright" min="0"  max="1" step="0.001" value="0" </input> </span>
         <span>Top: <input type="range" id="conoorltop" min="0"  max="1" step="0.001" value="0" </input> </span>
         <span>Bottom: <input type="range" id="controlbottom" min="0"  max="1" step="0.001" value="0"> </input> </span>
+        <span>Brightness: <input type="range" id="controlbrightness" min="0"  max="10" step="0.001" value="0"> </input> </span>
+        <span>Contrast: <input type="range" id="controlcontrast" min="0"  max="1" step="0.001" value="0"> </input> </span>
     </div>` );
         
     });
