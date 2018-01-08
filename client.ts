@@ -243,6 +243,7 @@ class Editor {
             text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
 
+        $(".badgeContainer").sort((a, b) => a.id.toLowerCase() > b.id.toLowerCase() ? 1: -1).detach().appendTo("#badges");        
     }
 
     closeSpareImage(filename:string, index: number) {
