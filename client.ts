@@ -25,6 +25,8 @@ interface Badge {
     imageWidth: number;
     imageHeight: number;
     left, right, top, bottom: number;
+    brightness: number;
+
 }
 
 interface Config {
