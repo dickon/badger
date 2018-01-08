@@ -101,8 +101,8 @@ class Editor {
         let badge = this.badgemap[badgeId];
         console.log(`selected ${badge.first} ${badge.last}`);
         let handle = this.getHandle(badge);
-        $('.badgeContainer').css('margin', '0em');
-        $(`#${handle}`).css('margin', '1em');
+        $('.badgeContainer').removeClass('highlight');
+        $(`#${handle}`).addClass('highlight');
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
         // const paper = Snap(`#editorImage`);
@@ -168,7 +168,7 @@ class Editor {
         } else {
             console.log(`no badge found in DOM with id ${oldBadge}`);
         }
-        $('#badges').append(`<span class="badgeContainer" id="${handle}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
+        $('#badges').append(`<div class="badgeContainer" id="${handle}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
         let paper = Snap(`#badgeSvg${badge.id}`);
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
 
