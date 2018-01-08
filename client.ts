@@ -100,6 +100,9 @@ class Editor {
         console.log(`selected ${badgeId}`);       
         let badge = this.badgemap[badgeId];
         console.log(`selected ${badge.first} ${badge.last}`);
+        let handle = this.getHandle(badge);
+        $('.badgeContainer').css('margin', '0em');
+        $(`#${handle}`).css('margin', '1em');
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
         // const paper = Snap(`#editorImage`);
