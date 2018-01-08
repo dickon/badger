@@ -251,7 +251,9 @@ class Editor {
             text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
 
-        $(".badgeContainer").sort((a, b) => a.id.toLowerCase() > b.id.toLowerCase() ? 1: -1).detach().appendTo("#badges");        
+        // $(selector) does have sort but the JQuery<HTMLElement> doesn't
+        // TODO: raise a bug against the JQuery @types declaration?
+        ($(".badgeContainer") as any).sort((a, b) => a.id.toLowerCase() > b.id.toLowerCase() ? 1: -1).detach().appendTo("#badges");        
     }
 
     closeSpareImage(filename:string, index: number) {
@@ -312,7 +314,13 @@ let config = {
         {
             type: 'component',
             componentName: 'badges',
-        },{
+        },
+        {
+            type: 'component',
+            componentName: 'controls',
+            height: 40,
+        },
+        {
             type: 'component',
             componentName: 'spare',
             height: 20,
@@ -327,10 +335,15 @@ function compose() {
     });
     let myLayout = new GoldenLayout( config );
     myLayout.registerComponent( 'editor', function( c, s ){
+        console.log('creating editor');
         c.getElement().html( `<div id="editor" class="scroller"><span id="svgContainer" width="60%" height="100%"><svg id="editorImage" width="100%" height="100%"></svg><span><span><form><input type="text"></input></form></span></div>` );
     });
     myLayout.registerComponent( 'badges', function( container, componentState ){
         container.getElement().html( '<div id="badges" class="scroller"></div>' );
+    });
+    myLayout.registerComponent( 'controls', function( container, componentState ){
+        console.log('creating controls');
+        container.getElement().html( '<div id="controls" class="scroller">Control goes here</div>' );
     });
     myLayout.registerComponent( 'spare', function( container, componentState ){
         container.getElement().html( '<div id="spareImages" class="scroller"></div>' );
