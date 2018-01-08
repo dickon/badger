@@ -149,6 +149,7 @@ async function go() {
         {path:'node_modules/golden-layout/src/css/goldenlayout-light-theme.css', route: '/css/goldenlayout-light-theme.css'},
         {path:'node_modules/golden-layout/src/css/goldenlayout-base.css', route: '/css/goldenlayout-base.css'},
         {path:'node_modules/snapsvg/dist/snap.svg.js', route:'/js/snap.js'},
+        {path:'node_modules/rangeslider.js/dist/rangeslider.min.js', route:'/js/rangeslider.min.js'},
         {path:'node_modules/jquery/dist/jquery.min.js', route:'/js/jquery.min.js'}]) {
         const filename = path.join(__dirname , "..", item.path)
         console.log(

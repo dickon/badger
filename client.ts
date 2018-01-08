@@ -343,7 +343,14 @@ function compose() {
     });
     myLayout.registerComponent( 'controls', function( container, componentState ){
         console.log('creating controls');
-        container.getElement().html( '<div id="controls" class="scroller">Control goes here</div>' );
+        container.getElement().html( `<div id="controls" class="scroller">
+        <span>Currently selected badge: <span id="controlbadge">none</span></span>
+        <span>Left: <input type="range" id="controlleft" min="0"  max="1" step="0.001" value="0" </input> </span>
+        <span>Right: <input type="range" id="controlright" min="0"  max="1" step="0.001" value="0" </input> </span>
+        <span>Top: <input type="range" id="conoorltop" min="0"  max="1" step="0.001" value="0" </input> </span>
+        <span>Bottom: <input type="range" id="controlbottom" min="0"  max="1" step="0.001" value="0"> </input> </span>
+    </div>` );
+        
     });
     myLayout.registerComponent( 'spare', function( container, componentState ){
         container.getElement().html( '<div id="spareImages" class="scroller"></div>' );
