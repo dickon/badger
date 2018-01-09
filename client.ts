@@ -123,6 +123,8 @@ class Editor {
                     dataType: 'json'
             });
             editor.render(badge);
+            let handle = editor.getHandle(badge);
+            $(`#${handle}`).get(0).scrollIntoView();
         });
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
