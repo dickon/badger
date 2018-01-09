@@ -65,6 +65,7 @@ class Editor {
     spareImages: string[];
     grid: boolean;
     limit: number;
+    current: Badge;
 
     constructor(config:Config, low=false, grid=false, limit=-1) {
         this.config = config;
@@ -104,28 +105,7 @@ class Editor {
         $('.badgeContainer').removeClass('highlight');
         $(`#${handle}`).addClass('highlight');
         $(`#controlbadge`).text(`${badge.first} ${badge.last}`);
-        $('input[type=range]').on('input', function () {
-            let control = $(this);
-            let controlid = $(this).attr('id').substr('control'.length);
-            let v = control.val();
-            badge[controlid] = v;
-            let update = {};
-            update[controlid] = v;
-            let url = `/api/configs/${editor.config.name}/image/${badge.filename}/${controlid}`;
-            console.log(`POST to ${url}`);
-            // we fire off async ajax requests and don't wait for them
-            // since this is a slider generating lots of events there's no guarantee that the last database update
-            // is the one that ends up in the database, so we optimistically for now try this approach and see if it is close enough
-            $.ajax({url: url,
-                    type: 'POST',
-                    success: (response) => console.log(`server acknowledge response ${response} when stroing ${controlid} ${control.val()} for ${badge.filename}`),
-                    data: update,
-                    dataType: 'json'
-            });
-            editor.render(badge);
-            let handle = editor.getHandle(badge);
-            $(`#${handle}`).get(0).scrollIntoView();
-        });
+        this.current = badge;
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
         // const paper = Snap(`#editorImage`);
@@ -386,6 +366,29 @@ function compose() {
             editor = new Editor(config, true); 
             socket.emit('usingConfig', config.id);
             editor.loadBadges(true);
+            $('input[type=range]').on('input', function () {
+                let badge = editor.current;
+                let control = $(this);
+                let controlid = $(this).attr('id').substr('control'.length);
+                let v = control.val();
+                badge[controlid] = v;
+                let update = {};
+                update[controlid] = v;
+                let url = `/api/configs/${editor.config.name}/image/${badge.filename}/${controlid}`;
+                console.log(`POST to ${url}`);
+                // we fire off async ajax requests and don't wait for them
+                // since this is a slider generating lots of events there's no guarantee that the last database update
+                // is the one that ends up in the database, so we optimistically for now try this approach and see if it is close enough
+                $.ajax({url: url,
+                        type: 'POST',
+                        success: (response) => console.log(`server acknowledge response ${response} when stroing ${controlid} ${control.val()} for ${badge.filename}`),
+                        data: update,
+                        dataType: 'json'
+                });
+                editor.render(badge);
+                let handle = editor.getHandle(badge);
+                $(`#${handle}`).get(0).scrollIntoView();
+            });
             socket.on('newImage', (image:Image) => editor.drawSpareImage(image));
         });
     }, 100);
