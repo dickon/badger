@@ -371,7 +371,6 @@ function compose() {
         <span>Top: <input type="range" id="conoorltop" min="0"  max="1" step="0.001" value="0" </input> </span>
         <span>Bottom: <input type="range" id="controlbottom" min="0"  max="1" step="0.001" value="0"> </input> </span>
         <span>Brightness: <input type="range" id="controlbrightness" min="0"  max="10" step="0.001" value="0"> </input> </span>
-        <span>Contrast: <input type="range" id="controlcontrast" min="0"  max="1" step="0.001" value="0"> </input> </span>
     </div>` );
         
     });
