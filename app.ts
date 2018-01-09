@@ -15,7 +15,11 @@ import * as process from "process";
 import * as socketIo from "socket.io";
 import * as http from "http";
 import * as chokidar from "chokidar";
+import * as bodyParser from "body-parser";
+
 let app = express();
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 let server = http.createServer(app);
 let io = socketIo(server);
 let low = true;
@@ -104,8 +108,6 @@ async function go() {
             });
         }
     }));
-
-
     app.get('/api/configs/:config/image/:image/size', (req, res) => getImageDirectory(req).then(i=> {
         let low = req.query.low;
         let match = req.params.image.match(/[0-9\.a-zA-Z\-_]/);
@@ -115,6 +117,26 @@ async function go() {
             else res.json(low ? {width:512, height: Math.ceil(dimensions.height/dimensions.width*512)} : dimensions);
         });
     }));
+    app.post('/api/configs/:config/image/:filename/:parameter', (req, res) => {
+        console.log(`POST parameter [${JSON.stringify(req.body)}]`);
+        let match = req.params.filename.match(/[0-9\.a-zA-Z\-_]/);
+        if (match == null) {
+            res.status(500).send({error:'bad image name'});
+            return;
+        }
+        let valt = req.body[req.params.parameter];
+        console.log(`POST parameter value [${valt}]`);
+        let value = parseFloat(valt);
+        console.log(`parsed to ${value}`);
+        let change = {};
+        change[req.params.parameter] = value;
+        console.log(`made change`);
+        console.log(`want to store value ${value} for ${req.params.parameter} of ${req.params.filename} on ${req.params.config}`);
+        // TODO: handle failures of either of the queries
+        // TODO: use a join and update in one db operation? this double operation should be pretty safe in practice
+        knex('configs').where({name:req.params.config}).first().then(config=>
+            knex('images').where({filename: req.params.filename, configId:config.id}).update(change).then(_=>res.json(change)));
+    });
     app.get('/api/configs/:config/background', (req, res) => getBackgroundImageFile(req).then(f=> {
         if (f == null) res.status(404).send('no background');
         else res.sendFile(f);

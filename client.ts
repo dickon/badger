@@ -107,7 +107,21 @@ class Editor {
         $('input[type=range]').on('input', function () {
             let control = $(this);
             let controlid = $(this).attr('id').substr('control'.length);
-            badge[controlid] = control.val();
+            let v = control.val();
+            badge[controlid] = v;
+            let update = {};
+            update[controlid] = v;
+            let url = `/api/configs/${editor.config.name}/image/${badge.filename}/${controlid}`;
+            console.log(`POST to ${url}`);
+            // we fire off async ajax requests and don't wait for them
+            // since this is a slider generating lots of events there's no guarantee that the last database update
+            // is the one that ends up in the database, so we optimistically for now try this approach and see if it is close enough
+            $.ajax({url: url,
+                    type: 'POST',
+                    success: (response) => console.log(`server acknowledge response ${response} when stroing ${controlid} ${control.val()} for ${badge.filename}`),
+                    data: update,
+                    dataType: 'json'
+            });
             editor.render(badge);
         });
         // let oldImage=Snap(`#badgeImageMain`);
