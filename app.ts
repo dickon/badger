@@ -1,9 +1,3 @@
-// TODO: remove this hack and get the es6 declarations in place properly
-interface String {
-    endsWith(searchString: string, endPosition?: number): boolean;
-    toLowerCase(): String;
-}
-
 import * as express from "express";
 import * as fs from "fs";
 import * as path from "path";
