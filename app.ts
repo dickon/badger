@@ -11,50 +11,21 @@ import * as http from "http";
 import * as chokidar from "chokidar";
 import * as bodyParser from "body-parser";
 
-let app = express();
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-let server = http.createServer(app);
-let io = socketIo(server);
-let low = true;
-let sizeofPromise = promise.denodeify(sizeOf);
-let readdir = promise.denodeify(fs.readdir);
 function fail(err) {
     console.log(`fail: ${err}`);
     process.exit(2);
 }
+
 async function go() {
-    const knex: client = client({client:'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3"}});
-    console.log("starting");
-    await knex.schema.createTableIfNotExists('configs', function (t) {
-        t.increments('id').primary()
-        for (let sname of ['name', 'image_directory', 'background_image_file']) 
-            t.string(sname).notNullable()
-        t.integer('badgeWidth').notNullable()
-        t.integer('badgeHeight').notNullable()
-    }).catch(fail)
-    console.log("configs table present")
-    await knex.schema.createTableIfNotExists('badges', function (t) {
-        t.increments('id').primary();        
-        for (let iname of ['configId'])
-            t.integer(iname).notNullable()
-        for (let sname of ['first', 'last', 'title' ]) 
-            t.text(sname).notNullable()
-        t.text('filename')
-        t.boolean('printed')
-    }).catch(fail)
-    console.log("badges table present")
-    
-    await knex.schema.createTableIfNotExists('images', function (t) {
-        t.increments('id').primary();        
-        t.integer('configId').notNullable();
-        for (let iname of ['left', 'right', 'bottom', 'top', 'brightness', 'contrast', 'rotation'])
-            t.float(iname).notNullable()
-        for (let sname of ['filename', 'recentFirst', 'recentLast', 'recentTitle' ]) 
-            t.text(sname).notNullable()
-        t.boolean('hidden').notNullable()
-    }).catch(fail)
-    console.log("images table present")
+    const app = express();
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json());
+    const server = http.createServer(app);
+    const io = socketIo(server);
+    let low = true;
+    const sizeofPromise = promise.denodeify(sizeOf);
+    const readdir = promise.denodeify(fs.readdir);
+    const knex: client = await openDatabase();
     let getImageDirectory = (req)=> knex.select('image_directory').from('configs').where('name', req.params.config).first().then(x=>x.image_directory);
     let getBackgroundImageFile = (req) => knex.select('background_image_file').from('configs').where('name', req.params.config).first().then(x=>x.background_image_file);
     let jsonGet = (urlPattern, fn) => app.get(urlPattern, (req,res)=> fn(req).then(x=>res.json(x)).catch(err => {
@@ -210,4 +181,42 @@ async function go() {
     console.log("finished");
 }
 go().catch(fail)
+
+async function openDatabase() {
+    const knex: client = client({ client: 'sqlite3', useNullAsDefault: true, connection: { filename: "test.sqlite3" } });
+    await ensureSchemaExists(knex);
+    return knex;
+}
+
+async function ensureSchemaExists(knex: client) {
+    console.log("starting");
+    await knex.schema.createTableIfNotExists('configs', function (t) {
+        t.increments('id').primary();
+        for (let sname of ['name', 'image_directory', 'background_image_file'])
+            t.string(sname).notNullable();
+        t.integer('badgeWidth').notNullable();
+        t.integer('badgeHeight').notNullable();
+    }).catch(fail);
+    console.log("configs table present");
+    await knex.schema.createTableIfNotExists('badges', function (t) {
+        t.increments('id').primary();
+        for (let iname of ['configId'])
+            t.integer(iname).notNullable();
+        for (let sname of ['first', 'last', 'title'])
+            t.text(sname).notNullable();
+        t.text('filename');
+        t.boolean('printed');
+    }).catch(fail);
+    console.log("badges table present");
+    await knex.schema.createTableIfNotExists('images', function (t) {
+        t.increments('id').primary();
+        t.integer('configId').notNullable();
+        for (let iname of ['left', 'right', 'bottom', 'top', 'brightness', 'contrast', 'rotation'])
+            t.float(iname).notNullable();
+        for (let sname of ['filename', 'recentFirst', 'recentLast', 'recentTitle'])
+            t.text(sname).notNullable();
+        t.boolean('hidden').notNullable();
+    }).catch(fail);
+    console.log("images table present");
+}
 
