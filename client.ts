@@ -105,6 +105,8 @@ class Editor {
         $('.badgeContainer').removeClass('highlight');
         $(`#${handle}`).addClass('highlight');
         $(`#controlbadge`).text(`${badge.first} ${badge.last}`);
+        for (let dim of ['left', 'right', 'top', 'bottom', 'brightness'])
+            $(`#control${dim}`).val(badge[dim]);
         this.current = badge;
         // let oldImage=Snap(`#badgeImageMain`);
         // if (oldImage != null) oldImage.remove();
