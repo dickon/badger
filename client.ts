@@ -1,7 +1,7 @@
 interface XML1HttpRequest {}
 var GoldenLayout: any;
 var io: any;
-let DEBUG = false;
+let DEBUG = true;
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
     ev.dataTransfer.setData("text", image);
@@ -183,10 +183,10 @@ class Editor {
         const imBottom = 0.975;
         const imXCentre = this.config.badgeWidth * (imLeft + imRight)/2;
         const imYCentre = this.config.badgeHeight * (imTop + imBottom)/2
-        const portWidth = (imRight - imLeft) * this.config.badgeWidth;
-        const portHeight = (imBottom - imTop) * this.config.badgeHeight;
-        const portRatio = portHeight / portWidth;
-        const imHeight = imBottom - imTop
+        const portWidth = (imRight - imLeft) * this.config.badgeWidth;  // pixel size of image space width
+        const portHeight = (imBottom - imTop) * this.config.badgeHeight; // pixel size of image space height
+        const portRatio = portHeight / portWidth; // aspect ratio of the image space
+        const imHeight = imBottom - imTop;
 
         for (let field of ['left', 'right', 'top', 'bottom']) {
             if (badge[field] == null) badge[field] = 0;
@@ -207,26 +207,27 @@ class Editor {
         const visibleHeight = hfit ?  portWidth*clippedRatio  : portHeight;
 
         const clippedFullWidth = ( badge.rotation == 0 ? visibleWidth * (1 + badge.left + badge.right) : visibleHeight * (1 + badge.top + badge.bottom));
-        const clippedFullHeight = originalAspectRatio*clippedFullWidth;
+        const  clippedFullHeight = originalAspectRatio*clippedFullWidth;
 
         const scale = (badge.rotation == 0) ? (clippedFullHeight < visibleHeight ? visibleHeight/clippedFullHeight : 1):
                                              (clippedFullWidth < visibleWidth ? visibleWidth / clippedFullHeight : 1);
         const fullWidth = scale * clippedFullWidth;
         const fullHeight = (fullWidth * originalAspectRatio);
 
-        const imagePositionLeft = imXCentre-fullWidth*(badge.left - badge.right + 1)/2;  
-        const imagePositionTop = imYCentre-fullHeight*(badge.top - badge.bottom +1)/2;
+        const imagePositionLeft = imXCentre-fullWidth/2;  
+        const imagePositionTop = imYCentre-fullHeight/2;
         if (DEBUG) paper.rect(imLeft*this.config.badgeWidth, imTop*this.config.badgeHeight, (imRight-imLeft)*this.config.badgeWidth, (imBottom-imTop)*this.config.badgeHeight).attr({fill:'red'});
+        if (DEBUG) paper.rect(imagePositionLeft, imagePositionTop, fullWidth*scale, fullHeight*scale).attr({fill:'brown'});
         if (badge.filename != null) {
             let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
-                    imagePositionLeft, imagePositionTop, fullWidth, fullHeight);
+                    imagePositionLeft, imagePositionTop, fullWidth*scale, fullHeight*scale);
             if (badge.brightness == null) badge.brightness = 1.0;
             if (badge.brightness != 1)
                 im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
             im.transform(`r${badge.rotation}`);
             console.log(`hfit=${hfit} portwidth=${portWidth} portheight=${portHeight} clippedRatio=${clippedRatio} visiblerwidth=${visibleWidth} visibleheight=${visibleHeight}`);
             let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
-                                    visibleWidth, visibleHeight).attr({fill:'#fff'});
+                visibleWidth, visibleHeight).attr({fill:'#fff'});
             let group = paper.group(im);
             group.attr({mask:cliprect});
             let g2 = paper.group(group).attr({id:`badgeImage${badge.id}`});
@@ -235,7 +236,9 @@ class Editor {
                 paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
                 paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
                 paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
-                paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.4pt', fill:'white'});
+                paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.8pt', fill:'white'});
+                paper.text(3,15, `${imagePositionTop}=${imYCentre}-${fullHeight}*(${badge.top}-${badge.bottom}+1)/2`).attr({'font-size':'2pt', fill:'white'});
+                paper.text(3,18, `clippedFullHeight=${clippedFullHeight} visibleHeight=${visibleHeight}`).attr({'font-size':'2pt', fill:'white'});
             }
         }
         
@@ -248,12 +251,13 @@ class Editor {
         //                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
 
         for (var name of ['first', 'last', 'title']) {
+            let fill = this.grid ? 'black': ((name == 'title' ? '#c0c40b':'white'));
             let text = paper.text(this.config.badgeWidth*0.775, this.config.badgeHeight*(name=='first' ? 0.28 : (name == 'title'? 0.61 : 0.47 )), 
-                capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:(name == 'title' ? '#c0c40b':'white'), stroke:'none', 'font-size':'10pt' });
+                capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:fill, stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
             text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
                                                      this.config.badgeWidth*0.2*10/bbox.width)}pt`});
-            text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+            if (!this.grid) text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
 
         // $(selector) does have sort but the JQuery<HTMLElement> doesn't
