@@ -57,6 +57,40 @@ function choose(configs:Config[]) {
     return matches[0];
 }
 
+interface Box {
+    origin: Vector;
+    size: Vector;
+}
+
+interface Vector {
+    x: number;
+    y: number;
+}
+
+function vectorMultiply (alpha:Vector, beta: Vector) {
+    return {x:alpha.x * beta.x, y:alpha.y * beta.y};
+}
+
+function vectorAdd (alpha:Vector, beta:Vector) {
+    return {x:alpha.x+beta.x, y:alpha.y+beta.y};
+}
+
+function boxScale(box:Box, scale:Vector):Box {
+    return {origin: vectorMultiply(box.origin, scale), size: vectorMultiply(box.size, scale)};
+}
+
+function boxCentre(box:Box):Vector {
+    return {x: box.origin.x+box.size.x/2, y:box.origin.y+box.size.y/2};
+}
+
+function ratio(vec: Vector):number {
+    return vec.y/vec.x;
+}
+
+function drawBox(paper: any, box: Box) {
+    return paper.rect(box.origin.x, box.origin.y, box.size.x, box.size.y);
+}
+
 class Editor {
     badges: any;
     badgemap: any;
@@ -163,6 +197,10 @@ class Editor {
     }
 
     render(badge:Badge) {
+        for (let field of ['left', 'right', 'top', 'bottom']) {
+            if (badge[field] == null) badge[field] = 0;
+            badge[field] = +badge[field];
+        }
         console.log(`rendering ${badge.id} ${badge.first} ${badge.last}`);
         console.log(`badge ${JSON.stringify(badge)}`);
         let handle = this.getHandle(badge);
@@ -174,71 +212,65 @@ class Editor {
             console.log(`no badge found in DOM with id ${oldBadge}`);
         }
         $('#badges').append(`<div class="badgeContainer" id="${handle}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
+
+
         let paper = Snap(`#badgeSvg${badge.id}`);
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
+        const badgeSize: Vector = {x: this.config.badgeWidth, y: this.config.badgeHeight};
+        
+        const imageLimitsFraction: Box = {origin:{x:0.05, y:0.025}, size:{x:0.5, y:0.95}}; // image limits as fractons
+        const imageLimitsBadge = boxScale(imageLimitsFraction, badgeSize); // image limits in badge coordinates
+        const imageCentreBadge = boxCentre(imageLimitsBadge); // where the image centre should go
 
-        const imLeft = 0.05;
-        const imRight = 0.55;
-        const imTop = 0.025;
-        const imBottom = 0.975;
-        const imXCentre = this.config.badgeWidth * (imLeft + imRight)/2;
-        const imYCentre = this.config.badgeHeight * (imTop + imBottom)/2
-        const portWidth = (imRight - imLeft) * this.config.badgeWidth;  // pixel size of image space width
-        const portHeight = (imBottom - imTop) * this.config.badgeHeight; // pixel size of image space height
-        const portRatio = portHeight / portWidth; // aspect ratio of the image space
-        const imHeight = imBottom - imTop;
+        const clipBoxFraction:Box = {origin:{x:badge.left, y:badge.top}, size: {x:1-badge.left-badge.right, y:1-badge.top-badge.bottom}}; // image cllpping as fractions
+        const imageSize:Vector = {x:badge.rotation == 0 ? badge.imageWidth : badge.imageHeight, y:badge.rotation == 0 ? badge.imageHeight : badge.imageWidth}; // rotated original image size
+        const clipBoxImage = boxScale(clipBoxFraction, imageSize); // clip box in the coordinate space of the original image
 
-        for (let field of ['left', 'right', 'top', 'bottom']) {
-            if (badge[field] == null) badge[field] = 0;
-            badge[field] = +badge[field];
+        let clipmode = '';
+        let clipOffset: Vector = null;
+        let clipSizeChange: Vector = null;
+        let gapBadge = 0;
+        if (ratio(clipBoxImage.size) > ratio(imageLimitsBadge.size)) {
+            // image is taller than clipbox; leave gaps at the left and right edge
+            let clipWidthBadge = imageLimitsBadge.size.y/ratio(clipBoxImage.size);
+            gapBadge = (imageLimitsBadge.size.x - clipWidthBadge)/2;
+            clipOffset = {x:gapBadge, y:0};
+            clipSizeChange = {x:-gapBadge*2, y:0};
+            clipmode = 'hgaps';
+        } else {
+            // image is shorter than clipbox; leave gaps at the top and bottom edge
+            let clipHeightBadge = imageLimitsBadge.size.x*ratio(clipBoxImage.size);
+            gapBadge = (imageLimitsBadge.size.y - clipHeightBadge)/2;
+            clipOffset = {x:0, y:gapBadge};
+            clipSizeChange = {x:0, y:-gapBadge*2};
+            clipmode = 'vgaps';
         }
+        let clipBoxBadge: Box = {origin:vectorAdd(imageLimitsBadge.origin, clipOffset), size:vectorAdd(imageLimitsBadge.size, clipSizeChange)};
+        let imageBoxBadge: Box = {origin:vectorAdd(clipBoxBadge.origin, {x:-(1-clipBoxFraction.origin.x)/ clipBoxFraction.size.x, 
+                                                                         y:-clipBoxFraction.origin.y* imageSize.y}), 
+                                  size:{x:clipBoxBadge.size.x / (clipBoxFraction.size.x), y:clipBoxBadge.size.y / (clipBoxFraction.size.y)}};
 
-        const originalAspectRatio = badge.imageHeight / badge.imageWidth;
-        const rotatedImageWidth = badge.rotation == 0 ? badge.imageWidth : badge.imageHeight;
-        const rotatedImageHeight = badge.rotation == 0 ? badge.imageHeight : badge.imageWidth;
-        const rotatedAspectRatio = rotatedImageHeight / rotatedImageWidth;
-        console.log(`badge image width=${badge.imageWidth} image height=${badge.imageHeight} badge top=${badge.top} bottom=${badge.bottom} left=${badge.left} right=${badge.right}`);
-        const clipBoxRatio = (1-badge.top-badge.bottom) / (1-badge.right-badge.left);
-        const clippedRatio = rotatedAspectRatio * clipBoxRatio;
-
-        const hfit = clippedRatio < portRatio;
-    
-        const visibleWidth = hfit ?  portWidth                : portHeight / clippedRatio;
-        const visibleHeight = hfit ?  portWidth*clippedRatio  : portHeight;
-
-        const clippedFullWidth = ( badge.rotation == 0 ? visibleWidth * (1 + badge.left + badge.right) : visibleHeight * (1 + badge.top + badge.bottom));
-        const  clippedFullHeight = originalAspectRatio*clippedFullWidth;
-
-        const scale = (badge.rotation == 0) ? (clippedFullHeight < visibleHeight ? visibleHeight/clippedFullHeight : 1):
-                                             (clippedFullWidth < visibleWidth ? visibleWidth / clippedFullHeight : 1);
-        const fullWidth = scale * clippedFullWidth;
-        const fullHeight = (fullWidth * originalAspectRatio);
-
-        const imagePositionLeft = imXCentre-fullWidth/2;  
-        const imagePositionTop = imYCentre-fullHeight/2;
-        if (DEBUG) paper.rect(imLeft*this.config.badgeWidth, imTop*this.config.badgeHeight, (imRight-imLeft)*this.config.badgeWidth, (imBottom-imTop)*this.config.badgeHeight).attr({fill:'red'});
-        if (DEBUG) paper.rect(imagePositionLeft, imagePositionTop, fullWidth*scale, fullHeight*scale).attr({fill:'brown'});
+        if (DEBUG) drawBox(paper, imageLimitsBadge).attr({fill:'red'});
+        if (DEBUG) drawBox(paper, clipBoxBadge).attr({stroke:'blue', fill:'none'});;
         if (badge.filename != null) {
             let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
-                    imagePositionLeft, imagePositionTop, fullWidth*scale, fullHeight*scale);
+                                imageBoxBadge.origin.x, imageBoxBadge.origin.y, imageBoxBadge.size.x, imageBoxBadge.size.y);
             if (badge.brightness == null) badge.brightness = 1.0;
             if (badge.brightness != 1)
                 im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
             im.transform(`r${badge.rotation}`);
-            console.log(`hfit=${hfit} portwidth=${portWidth} portheight=${portHeight} clippedRatio=${clippedRatio} visiblerwidth=${visibleWidth} visibleheight=${visibleHeight}`);
-            let cliprect = paper.rect(imXCentre - visibleWidth/2, imYCentre - visibleHeight/2, 
-                visibleWidth, visibleHeight).attr({fill:'#fff'});
+            let cliprect = drawBox(paper, clipBoxBadge).attr({fill:'#fff'});
             let group = paper.group(im);
             group.attr({mask:cliprect});
             let g2 = paper.group(group).attr({id:`badgeImage${badge.id}`});
             g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
             if (DEBUG)  {
-                paper.circle(imXCentre, imYCentre, 2).attr({fill:'red'});
-                paper.text(3,3, `${hfit?'hfit':'vfit'} ${badge.rotation==0?"straight":"rotated"} visible ${Math.floor(visibleWidth)}x${Math.floor(visibleHeight)} port ${Math.floor(portWidth)}x${Math.floor(portHeight)} full ${Math.floor(fullWidth)}x${Math.floor(fullHeight)} (scale ${scale})`).attr({'font-size':'2pt', fill:'white'});
-                paper.text(3,6, `original aspect ratio ${originalAspectRatio.toPrecision(3)} rotated aspect ratio ${rotatedAspectRatio.toPrecision(3)} clipBoxRatio ${clipBoxRatio.toPrecision(3)} clipped ratio ${clippedRatio.toPrecision(3)} port ratio ${portRatio.toPrecision(3)} full ratio ${(fullHeight/fullWidth).toPrecision(3)} visible ratio ${(visibleHeight/visibleWidth).toPrecision(3)}`).attr({'font-size':'1.1pt', fill:'white'});
-                paper.text(3,9, `${JSON.stringify(badge)}`).attr({'font-size':'0.8pt', fill:'white'});
-                paper.text(3,15, `${imagePositionTop}=${imYCentre}-${fullHeight}*(${badge.top}-${badge.bottom}+1)/2`).attr({'font-size':'2pt', fill:'white'});
-                paper.text(3,18, `clippedFullHeight=${clippedFullHeight} visibleHeight=${visibleHeight}`).attr({'font-size':'2pt', fill:'white'});
+                paper.circle(imageCentreBadge.x, imageCentreBadge.y, 1).attr({fill:'red'});
+                paper.text(3,3, `${clipmode} gap=${gapBadge} ${badge.rotation==0?"straight":"rotated"} clipBoxFraction =${JSON.stringify(clipBoxFraction)}`).attr({'font-size':'1pt', fill:'white'});
+                paper.text(3,6, `image limits box = ${JSON.stringify(imageLimitsBadge)}`).attr({'font-size':'1pt', fill:'white'});
+                paper.text(3,9, `clip box = ${JSON.stringify(clipBoxBadge)}`).attr({'font-size':'1pt', fill:'white'});
+                paper.text(3,12, `image box = ${JSON.stringify(imageBoxBadge)}`).attr({'font-size':'1pt', fill:'white'});
+                paper.text(3,15, `Xscale = ${1/clipBoxFraction.size.x} Yscale = ${1/clipBoxFraction.size.y}`).attr({'font-size':'1pt', fill:'white'});
             }
         }
         
