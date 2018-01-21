@@ -1,7 +1,7 @@
 interface XML1HttpRequest {}
 var GoldenLayout: any;
 var io: any;
-let DEBUG = true;
+let DEBUG = false;
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
     ev.dataTransfer.setData("text", image);
@@ -226,24 +226,25 @@ class Editor {
         const imageSize:Vector = {x:badge.rotation == 0 ? badge.imageWidth : badge.imageHeight, y:badge.rotation == 0 ? badge.imageHeight : badge.imageWidth}; // rotated original image size
         const clipBoxImage = boxScale(clipBoxFraction, imageSize); // clip box in the coordinate space of the original image
 
-        let clipmode = '';
         let clipOffset: Vector = null;
         let clipSizeChange: Vector = null;
         let gapBadge = 0;
-        if (ratio(clipBoxImage.size) > ratio(imageLimitsBadge.size)) {
+        let imageTaller = ratio(clipBoxImage.size) > ratio(imageLimitsBadge.size);
+        let major = imageTaller ? 'x' : 'y';
+        let minor = imageTaller ? 'y' : 'x';
+        let clipmode = imageTaller ? 'hgaps':'vgaps';
+        if (imageTaller) {
             // image is taller than clipbox; leave gaps at the left and right edge
             let clipWidthBadge = imageLimitsBadge.size.y/ratio(clipBoxImage.size);
             gapBadge = (imageLimitsBadge.size.x - clipWidthBadge)/2;
             clipOffset = {x:gapBadge, y:0};
             clipSizeChange = {x:-gapBadge*2, y:0};
-            clipmode = 'hgaps';
         } else {
             // image is shorter than clipbox; leave gaps at the top and bottom edge
             let clipHeightBadge = imageLimitsBadge.size.x*ratio(clipBoxImage.size);
             gapBadge = (imageLimitsBadge.size.y - clipHeightBadge)/2;
             clipOffset = {x:0, y:gapBadge};
             clipSizeChange = {x:0, y:-gapBadge*2};
-            clipmode = 'vgaps';
         }
         let clipBoxBadge: Box = {origin:vectorAdd(imageLimitsBadge.origin, clipOffset), size:vectorAdd(imageLimitsBadge.size, clipSizeChange)};
 
