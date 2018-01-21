@@ -246,12 +246,15 @@ class Editor {
             clipmode = 'vgaps';
         }
         let clipBoxBadge: Box = {origin:vectorAdd(imageLimitsBadge.origin, clipOffset), size:vectorAdd(imageLimitsBadge.size, clipSizeChange)};
-        let imageBoxBadge: Box = {origin:vectorAdd(clipBoxBadge.origin, {x:-(1-clipBoxFraction.origin.x)/ clipBoxFraction.size.x, 
-                                                                         y:-clipBoxFraction.origin.y* imageSize.y}), 
-                                  size:{x:clipBoxBadge.size.x / (clipBoxFraction.size.x), y:clipBoxBadge.size.y / (clipBoxFraction.size.y)}};
 
+        // we now have clipBoxBadge, in badge coordinates, and clipBoxFraction in [0,1] of the original image
+        // Let's work out the full unclipped image size
+        let imageSizeBadge = {x: clipBoxBadge.size.x/clipBoxFraction.size.x, y:clipBoxBadge.size.y/clipBoxFraction.size.y};
+        // and from that derive the origin of the image in badge space
+        let imageOriginBadge = {x: clipBoxBadge.origin.x - imageSizeBadge.x * clipBoxFraction.origin.x,
+                                y: clipBoxBadge.origin.y - imageSizeBadge.y * clipBoxFraction.origin.y};
+        let imageBoxBadge = {origin:imageOriginBadge, size:imageSizeBadge};
         if (DEBUG) drawBox(paper, imageLimitsBadge).attr({fill:'red'});
-        if (DEBUG) drawBox(paper, clipBoxBadge).attr({stroke:'blue', fill:'none'});;
         if (badge.filename != null) {
             let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
                                 imageBoxBadge.origin.x, imageBoxBadge.origin.y, imageBoxBadge.size.x, imageBoxBadge.size.y);
@@ -264,14 +267,7 @@ class Editor {
             group.attr({mask:cliprect});
             let g2 = paper.group(group).attr({id:`badgeImage${badge.id}`});
             g2.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.9))});
-            if (DEBUG)  {
-                paper.circle(imageCentreBadge.x, imageCentreBadge.y, 1).attr({fill:'red'});
-                paper.text(3,3, `${clipmode} gap=${gapBadge} ${badge.rotation==0?"straight":"rotated"} clipBoxFraction =${JSON.stringify(clipBoxFraction)}`).attr({'font-size':'1pt', fill:'white'});
-                paper.text(3,6, `image limits box = ${JSON.stringify(imageLimitsBadge)}`).attr({'font-size':'1pt', fill:'white'});
-                paper.text(3,9, `clip box = ${JSON.stringify(clipBoxBadge)}`).attr({'font-size':'1pt', fill:'white'});
-                paper.text(3,12, `image box = ${JSON.stringify(imageBoxBadge)}`).attr({'font-size':'1pt', fill:'white'});
-                paper.text(3,15, `Xscale = ${1/clipBoxFraction.size.x} Yscale = ${1/clipBoxFraction.size.y}`).attr({'font-size':'1pt', fill:'white'});
-            }
+            
         }
         
         //if ($.inArray(image.filename, this.spareImages) != -1) return;
@@ -294,7 +290,20 @@ class Editor {
 
         // $(selector) does have sort but the JQuery<HTMLElement> doesn't
         // TODO: raise a bug against the JQuery @types declaration?
-        ($(".badgeContainer") as any).sort((a, b) => a.id.toLowerCase() > b.id.toLowerCase() ? 1: -1).detach().appendTo("#badges");        
+        ($(".badgeContainer") as any).sort((a, b) => a.id.toLowerCase() > b.id.toLowerCase() ? 1: -1).detach().appendTo("#badges");  
+        
+        if (DEBUG)  {
+            drawBox(paper, clipBoxBadge).attr({stroke:'blue', 'stroke-width': '0.3px', fill:'none'});;
+            drawBox(paper, imageBoxBadge).attr({stroke:'black', 'stroke-width': '0.3px', fill:'none'});;
+
+            paper.circle(imageCentreBadge.x, imageCentreBadge.y, 1).attr({fill:'red'});
+            paper.text(3,3, `${clipmode} gap=${gapBadge} ${badge.rotation==0?"straight":"rotated"} clipBoxFraction =${JSON.stringify(clipBoxFraction)}`).attr({'font-size':'1pt', fill:'white'});
+            paper.text(3,6, `image limits box = ${JSON.stringify(imageLimitsBadge)}`).attr({'font-size':'1pt', fill:'yellow'});
+            paper.text(3,9, `clip box = ${JSON.stringify(clipBoxBadge)}`).attr({'font-size':'1pt', fill:'yellow'});
+            paper.text(3,12, `image box = ${JSON.stringify(imageBoxBadge)}`).attr({'font-size':'1pt', fill:'yellow'});
+            paper.text(3,15, `Xscale = ${1/clipBoxFraction.size.x} Yscale = ${1/clipBoxFraction.size.y}`).attr({'font-size':'1pt', fill:'yellow'});
+
+        }
     }
 
     closeSpareImage(filename:string, index: number) {
