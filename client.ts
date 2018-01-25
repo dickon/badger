@@ -74,10 +74,11 @@ class Vector {
     multiply (beta: Vector) {
         return new Vector(this.x * beta.x, this.y * beta.y);
     }
-}
 
-function vectorAdd (alpha:Vector, beta:Vector): Vector{
-    return new Vector(alpha.x+beta.x, alpha.y+beta.y);
+    vectorAdd (beta:Vector): Vector{
+        return new Vector(this.x+beta.x, this.y+beta.y);
+    }
+    
 }
 
 function boxScale(box:Box, scale:Vector):Box {
@@ -251,8 +252,7 @@ class Editor {
             clipOffset = new Vector(0, gapBadge);
             clipSizeChange = new Vector(0, -gapBadge*2);
         }
-        let clipBoxBadge: Box = {origin:vectorAdd(imageLimitsBadge.origin, clipOffset), size:vectorAdd(imageLimitsBadge.size, clipSizeChange)};
-
+        let clipBoxBadge: Box = {origin:imageLimitsBadge.origin.vectorAdd(clipOffset), size:imageLimitsBadge.size.vectorAdd(clipSizeChange)};
         // we now have clipBoxBadge, in badge coordinates, and clipBoxFraction in [0,1] of the original image
         // Let's work out the full unclipped image size
         let imageSizeBadge = new Vector(clipBoxBadge.size.x/clipBoxFraction.size.x, clipBoxBadge.size.y/clipBoxFraction.size.y);
