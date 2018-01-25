@@ -226,13 +226,13 @@ class Editor {
         const imageSize:Vector = {x:badge.rotation == 0 ? badge.imageWidth : badge.imageHeight, y:badge.rotation == 0 ? badge.imageHeight : badge.imageWidth}; // rotated original image size
         const clipBoxImage = boxScale(clipBoxFraction, imageSize); // clip box in the coordinate space of the original image
 
-        let clipOffset: Vector = null;
         let clipSizeChange: Vector = null;
         let gapBadge = 0;
         let imageTaller = ratio(clipBoxImage.size) > ratio(imageLimitsBadge.size);
         let major = imageTaller ? 'x' : 'y';
         let minor = imageTaller ? 'y' : 'x';
         let clipmode = imageTaller ? 'hgaps':'vgaps';
+        let clipOffset = 0;
         if (imageTaller) {
             // image is taller than clipbox; leave gaps at the left and right edge
             let clipWidthBadge = imageLimitsBadge.size.y/ratio(clipBoxImage.size);
@@ -445,7 +445,7 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(choose(configs), false, false, 1); 
+         editor = new Editor(choose(configs), false, false, 8); 
          editor.loadBadges(false);
      });
 }
