@@ -79,6 +79,9 @@ class Vector {
         return new Vector(this.x+beta.x, this.y+beta.y);
     }
     
+    ratio():number {
+        return this.y/this.x;
+}
 }
 
 function boxScale(box:Box, scale:Vector):Box {
@@ -87,10 +90,6 @@ function boxScale(box:Box, scale:Vector):Box {
 
 function boxCentre(box:Box):Vector {
     return new Vector(box.origin.x+box.size.x/2, box.origin.y+box.size.y/2);
-}
-
-function ratio(vec: Vector):number {
-    return vec.y/vec.x;
 }
 
 function drawBox(paper: any, box: Box) {
@@ -234,20 +233,20 @@ class Editor {
 
         let clipSizeChange: Vector = null;
         let gapBadge = 0;
-        let imageTaller = ratio(clipBoxImage.size) > ratio(imageLimitsBadge.size);
+        let imageTaller = clipBoxImage.size.ratio() > imageLimitsBadge.size.ratio();
         let major = imageTaller ? 'x' : 'y';
         let minor = imageTaller ? 'y' : 'x';
         let clipmode = imageTaller ? 'hgaps':'vgaps';
         let clipOffset = new Vector(0,0);
         if (imageTaller) {
             // image is taller than clipbox; leave gaps at the left and right edge
-            let clipWidthBadge = imageLimitsBadge.size.y/ratio(clipBoxImage.size);
+            let clipWidthBadge = imageLimitsBadge.size.y/clipBoxImage.size.ratio();
             gapBadge = (imageLimitsBadge.size.x - clipWidthBadge)/2;
             clipOffset = new Vector(gapBadge, 0);
             clipSizeChange = new Vector(-gapBadge*2, 0);
         } else {
             // image is shorter than clipbox; leave gaps at the top and bottom edge
-            let clipHeightBadge = imageLimitsBadge.size.x*ratio(clipBoxImage.size);
+            let clipHeightBadge = imageLimitsBadge.size.x*clipBoxImage.size.ratio();
             gapBadge = (imageLimitsBadge.size.y - clipHeightBadge)/2;
             clipOffset = new Vector(0, gapBadge);
             clipSizeChange = new Vector(0, -gapBadge*2);
@@ -266,7 +265,7 @@ class Editor {
                                 imageBoxBadge.origin.x, imageBoxBadge.origin.y, imageBoxBadge.size.x, imageBoxBadge.size.y);
             if (badge.brightness == null) badge.brightness = 1.0;
             if (badge.brightness != 1)
-                im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});
+                im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});~
             im.transform(`r${badge.rotation}`);
             let cliprect = drawBox(paper, clipBoxBadge).attr({fill:'#fff'});
             let group = paper.group(im);
