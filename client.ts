@@ -285,11 +285,15 @@ class Editor {
 
         for (var name of ['first', 'last', 'title']) {
             let fill = this.grid ? 'black': ((name == 'title' ? '#c0c40b':'white'));
-            let text = paper.text(this.config.badgeWidth*0.775, this.config.badgeHeight*(name=='first' ? 0.28 : (name == 'title'? 0.61 : 0.47 )), 
-                capitalise(badge[name])).attr({'font-family': 'Arial', 'text-anchor':'middle', fill:fill, stroke:'none', 'font-size':'10pt' });
+            let xpos = this.config.badgeWidth*(this.grid ? 0.65 : 0.775);
+            let text = paper.text(xpos, this.config.badgeHeight*(name=='first' ? 0.28 : (name == 'title'? 0.61 : 0.47 )), 
+                capitalise(badge[name])).attr({'font-family': 'Arial', 
+                                            'text-anchor':this.grid ? 'left':'middle', fill:fill, stroke:'none', 'font-size':'10pt' });
             let bbox = text.getBBox();
-            text.attr({'style.font-size': `${Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
-                                                     this.config.badgeWidth*0.2*10/bbox.width)}pt`});
+            let calcFontSizePoints = Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
+                                              this.config.badgeWidth*0.2*10/bbox.width, 4);
+            text.attr({'style.font-size': `${calcFontSizePoints}pt`});
+            console.log(`${name} ${badge[name]} -> font size ${calcFontSizePoints}`);
             if (!this.grid) text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
         }           
 
