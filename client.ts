@@ -81,7 +81,7 @@ class Vector {
     
     ratio():number {
         return this.y/this.x;
-}
+    }
 }
 
 function boxScale(box:Box, scale:Vector):Box {
@@ -105,14 +105,16 @@ class Editor {
     grid: boolean;
     limit: number;
     current: Badge;
+    showBackground: boolean;
 
-    constructor(config:Config, low=false, grid=false, limit=-1) {
+    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true) {
         this.config = config;
         this.badgemap = {};
         this.lowPostfix = low ? "?low=1":"";
         this.spareImages = [];
         this.grid = grid;
         this.limit = limit;
+        this.showBackground = showBackground;
     }
 
     drop(ev, index:number) {
@@ -453,7 +455,7 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(choose(configs), false, false, 8); 
+         editor = new Editor(choose(configs), false, false, 8, true); 
          editor.loadBadges(false);
      });
 }
@@ -486,7 +488,7 @@ function grid() {
          config.imageTop = 0;
          config.imageBottom = 1;
          
-         let editor = new Editor(config, false, true); 
+         let editor = new Editor(config, false, true, 1000, false); 
          editor.loadBadges(false);
     });
 }
