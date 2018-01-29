@@ -106,8 +106,10 @@ class Editor {
     limit: number;
     current: Badge;
     showBackground: boolean;
+    fillOverride: string;
+    imageLimitsFraction: Box;
 
-    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true) {
+    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true, fillOverride=null) {
         this.config = config;
         this.badgemap = {};
         this.lowPostfix = low ? "?low=1":"";
@@ -115,6 +117,8 @@ class Editor {
         this.grid = grid;
         this.limit = limit;
         this.showBackground = showBackground;
+        this.fillOverride = fillOverride;
+        this.imageLimitsFraction = {origin: new Vector(0.05, 0.025), size:new Vector(0.5, 0.95)}; // image limits as fractons
     }
 
     drop(ev, index:number) {
@@ -225,8 +229,7 @@ class Editor {
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         const badgeSize = new Vector(this.config.badgeWidth, this.config.badgeHeight);
         
-        const imageLimitsFraction: Box = {origin: new Vector(0.05, 0.025), size:new Vector(0.5, 0.95)}; // image limits as fractons
-        const imageLimitsBadge = boxScale(imageLimitsFraction, badgeSize); // image limits in badge coordinates
+        const imageLimitsBadge = boxScale(this.imageLimitsFraction, badgeSize); // image limits in badge coordinates
         const imageCentreBadge = boxCentre(imageLimitsBadge); // where the image centre should go
 
         const clipBoxFraction:Box = {origin:new Vector(badge.left, badge.top), size: new Vector(1-badge.left-badge.right, 1-badge.top-badge.bottom)}; // image cllpping as fractions
@@ -286,17 +289,35 @@ class Editor {
         //                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
 
         for (var name of ['first', 'last', 'title']) {
-            let fill = this.grid ? 'black': ((name == 'title' ? '#c0c40b':'white'));
-            let xpos = this.config.badgeWidth*(this.grid ? 0.65 : 0.775);
-            let text = paper.text(xpos, this.config.badgeHeight*(name=='first' ? 0.28 : (name == 'title'? 0.61 : 0.47 )), 
-                capitalise(badge[name])).attr({'font-family': 'Arial', 
-                                            'text-anchor':this.grid ? 'left':'middle', fill:fill, stroke:'none', 'font-size':'10pt' });
-            let bbox = text.getBBox();
-            let calcFontSizePoints = Math.min(this.config.badgeHeight*(name == 'first' ? 0.35:0.2)*10/bbox.height, 
-                                              this.config.badgeWidth*0.2*10/bbox.width, 4);
-            text.attr({'style.font-size': `${calcFontSizePoints}pt`});
-            console.log(`${name} ${badge[name]} -> font size ${calcFontSizePoints}`);
-            if (!this.grid) text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+            let fill = this.fillOverride ? this.fillOverride: ((name == 'title' ? '#c0c40b':'white'));
+            let xpos = this.config.badgeWidth*(this.grid ? 0.5 : 0.775);
+            let yposFrac = 0;
+            let xSpaceFrac = 0.3;
+            let ySpaceFrac = 0;
+            switch (name) {
+                case 'first': yposFrac = this.grid ? 0.07: 0.25; xSpaceFrac = this.grid?1.0:xSpaceFrac; ySpaceFrac = this.grid ? 0.1 : 0.35; break;
+                case 'title': yposFrac = 0.61; ySpaceFrac = 0.2; break;
+                case 'last': yposFrac = 0.47; ySpaceFrac = 0.2; break;
+            }
+        
+            let ypos = this.config.badgeHeight*yposFrac;
+            let content = this.grid ? `${badge.first} ${badge.last.substr(0,1)}` : badge[name];
+            if (this.grid) content
+            if (name == 'first' || !this.grid) {
+                let text = paper.text(xpos, ypos, capitalise(content)).attr({'font-family': 'Arial', 
+                                                'text-anchor':'middle', fill:fill, stroke:'none', 'font-size':'10pt' });
+                let bbox = text.getBBox();
+                let desiredbox = {width:this.config.badgeWidth * xSpaceFrac, height:this.config.badgeHeight * ySpaceFrac}
+                let xRatio = bbox.width / (this.config.badgeWidth * xSpaceFrac);
+                // so, if we want the text 20mm wide  and the text in 10 point came out at  10mm, xRatio will be 2
+                let yRatio = bbox.height / (this.config.badgeHeight * ySpaceFrac);
+                let calcFontSizePoints = 10 / Math.max(xRatio, yRatio); // font size which should get us to the desired size
+                text.attr({'style.font-size': `${calcFontSizePoints}pt`});
+                let bboxscaled = text.getBBox();
+                console.log(`${name} ${badge[name]} -> font size ${calcFontSizePoints} bbox before ${bbox.width}x${bbox.height} ratio x=${xRatio} y=${yRatio} bbox after ${bboxscaled.width}x${bboxscaled.height} wanted ${desiredbox.width}x${desiredbox.height}`);
+            
+                if (!this.grid) text.attr({filter: paper.filter(Snap.filter.shadow(0.5, 0.5, 0.2, "black", 0.7))});
+            }
         }           
 
         // $(selector) does have sort but the JQuery<HTMLElement> doesn't
@@ -421,7 +442,7 @@ function compose() {
     setTimeout(()=> {
         $.getJSON('/api/configs', configs=> {
             let config = choose(configs);
-            editor = new Editor(config, true); 
+            editor = new Editor(config, true, false, 1000, true, null);
             socket.emit('usingConfig', config.id);
             editor.loadBadges(true);
             $('input[type=range]').on('input', function () {
@@ -455,7 +476,7 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(choose(configs), false, false, 8, true); 
+         editor = new Editor(choose(configs), false, false, 8, true, null); 
          editor.loadBadges(false);
      });
 }
@@ -488,7 +509,9 @@ function grid() {
          config.imageTop = 0;
          config.imageBottom = 1;
          
-         let editor = new Editor(config, false, true, 1000, false); 
+         let editor = new Editor(config, false, true, 1000, false, "black"); 
+         editor.imageLimitsFraction.origin = new Vector(0,0.1);
+         editor.imageLimitsFraction.size = new Vector(1, 0.75);
          editor.loadBadges(false);
     });
 }
