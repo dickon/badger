@@ -292,12 +292,12 @@ class Editor {
             let fill = this.fillOverride ? this.fillOverride: ((name == 'title' ? '#c0c40b':'white'));
             let xpos = this.config.badgeWidth*(this.grid ? 0.5 : 0.775);
             let yposFrac = 0;
-            let xSpaceFrac = 0.3;
+            let xSpaceFrac = 0.28;
             let ySpaceFrac = 0;
             switch (name) {
-                case 'first': yposFrac = this.grid ? 0.07: 0.25; xSpaceFrac = this.grid?1.0:xSpaceFrac; ySpaceFrac = this.grid ? 0.1 : 0.35; break;
-                case 'title': yposFrac = 0.61; ySpaceFrac = 0.2; break;
-                case 'last': yposFrac = 0.47; ySpaceFrac = 0.2; break;
+                case 'first': yposFrac = this.grid ? 0.07: 0.25; xSpaceFrac = this.grid?1.0:xSpaceFrac; ySpaceFrac = this.grid ? 0.1 : 0.2; break;
+                case 'title': yposFrac = 0.66; ySpaceFrac = 0.2; break;
+                case 'last': yposFrac = 0.45; ySpaceFrac = 0.2; break;
             }
         
             let ypos = this.config.badgeHeight*yposFrac;
@@ -476,7 +476,7 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(choose(configs), false, false, 8, true, null); 
+         editor = new Editor(choose(configs), false, false, 10, true, null); 
          editor.loadBadges(false);
      });
 }
