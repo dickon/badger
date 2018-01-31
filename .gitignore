@@ -8,3 +8,4 @@ values.js
 package-lock.json
 .DS_Store
 dumps/*
+yarn.lock
