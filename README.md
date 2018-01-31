@@ -1,8 +1,4 @@
-To run server in dev cycle:
-
-    nodemon --watch app.ts --exec 'ts-node'  app.ts
-
-On printing:
+# the problem with printing
 
 I'm using SnapSVG to generate some badges including background image, titles, a cropped ID photo with brightness control, etc. Code (and it is a bit hacky, needs refactoring and has no test coverage) is at http://github.com/dickon/badger/. I'm happy with the way the badges look on screen, as this screen capture shows:
 
@@ -24,9 +20,13 @@ and specifically does not have the blurriness.
 
 So far I have no good solution. Options:
 
-# get my SVG to look good in Safari and try printing from there.
-# use headless chrome and puppeteer to save an image
-# wkhtml2pdf
-# run SnapSVG in nodejs to produce a single SVG, then load the SVG into a vector editor and print from there.
+1. get my SVG to look good in Safari and try printing from there.
+2. use headless chrome and puppeteer to save an image
+3. wkhtml2pdf
+4. run SnapSVG in nodejs to produce a single SVG, then load the SVG into a vector editor and print from there.
 
+# development
+To run server in dev cycle:
+
+    nodemon --watch app.ts --exec 'ts-node'  app.ts
 
