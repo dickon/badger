@@ -2,6 +2,8 @@ interface XML1HttpRequest {}
 var GoldenLayout: any;
 var io: any;
 let DEBUG = false;
+let is_safari = navigator.userAgent.indexOf("Safari") > -1;
+
 function imageDrag(ev, image) {
     console.log(`dragging ${ev.target.id} ${image}`);
     ev.dataTransfer.setData("text", image);
@@ -112,13 +114,17 @@ class Editor {
     constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true, fillOverride=null) {
         this.config = config;
         this.badgemap = {};
+        if (is_safari) {
+            this.config.badgeWidth /= 1.07;
+            this.config.badgeHeight /= 1.07;
+        }
         this.lowPostfix = low ? "?low=1":"";
         this.spareImages = [];
         this.grid = grid;
         this.limit = limit;
         this.showBackground = showBackground;
         this.fillOverride = fillOverride;
-        this.imageLimitsFraction = {origin: new Vector(0.05, 0.025), size:new Vector(0.5, 0.95)}; // image limits as fractons
+        this.imageLimitsFraction = {origin: new Vector(0.05, 0.05), size:new Vector(0.5, 0.90)}; // image limits as fractons
     }
 
     drop(ev, index:number) {
@@ -268,9 +274,12 @@ class Editor {
         if (badge.filename != null) {
             let im = paper.image(`/api/configs/${this.config.name}/image/${badge.filename}${this.lowPostfix}`, 
                                 imageBoxBadge.origin.x, imageBoxBadge.origin.y, imageBoxBadge.size.x, imageBoxBadge.size.y);
-            if (badge.brightness == null) badge.brightness = 1.0;
-            if (badge.brightness != 1)
-                im.attr({filter: paper.filter(Snap.filter.brightness(badge.brightness))});~
+        
+            // if (badge.brightness == null) badge.brightness = 1.0;
+            // if (badge.brightness != 1 || is_safari) {
+            //     let brightness = is_safari ? Math.pow(badge.brightness,0.1):badge.brightness;
+            //     im.attr({filter: paper.filter(Snap.filter.brightness(brightness))});
+            // }
             im.transform(`r${badge.rotation}`);
             let cliprect = drawBox(paper, clipBoxBadge).attr({fill:'#fff'});
             let group = paper.group(im);
@@ -289,10 +298,10 @@ class Editor {
         //                        `class="thumbnail" src="/api/configs/${this.config.name}/image/${image.filename}${this.lowPostfix}"/></div>`);
 
         for (var name of ['first', 'last', 'title']) {
-            let fill = this.fillOverride ? this.fillOverride: ((name == 'title' ? '#c0c40b':'white'));
+            let fill = this.fillOverride ? this.fillOverride: ((name == 'title' ? '#0432ab':'white'));
             let xpos = this.config.badgeWidth*(this.grid ? 0.5 : 0.775);
             let yposFrac = 0;
-            let xSpaceFrac = 0.28;
+            let xSpaceFrac = 0.23;
             let ySpaceFrac = 0;
             switch (name) {
                 case 'first': yposFrac = this.grid ? 0.07: 0.25; xSpaceFrac = this.grid?1.0:xSpaceFrac; ySpaceFrac = this.grid ? 0.1 : 0.2; break;
@@ -303,6 +312,7 @@ class Editor {
             let ypos = this.config.badgeHeight*yposFrac;
             let content = this.grid ? `${badge.first} ${badge.last.substr(0,1)}` : badge[name];
             if (this.grid) content
+            if (name == 'title' && content == 'Team Member') content='Team';
             if (name == 'first' || !this.grid) {
                 let text = paper.text(xpos, ypos, capitalise(content)).attr({'font-family': 'Arial', 
                                                 'text-anchor':'middle', fill:fill, stroke:'none', 'font-size':'10pt' });
@@ -476,7 +486,7 @@ function compose() {
 
 function view() {       
      $.getJSON('/api/configs', configs=> {
-         editor = new Editor(choose(configs), false, false, 10, true, null); 
+         editor = new Editor(choose(configs), false, false, 1000, true, null); 
          editor.loadBadges(false);
      });
 }
