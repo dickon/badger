@@ -484,14 +484,14 @@ function compose() {
 }
 
 
-function view() {       
+function startView() {       
      $.getJSON('/api/configs', configs=> {
          editor = new Editor(choose(configs), false, false, 1000, true, null); 
          editor.loadBadges(false);
      });
 }
 
-function makeIndex() {
+function startCompose() {
     console.log("make index starting");
     $.getJSON('/api/configs', configs=> {
         console.log(`retrieved ${configs.length} configs`);
@@ -509,7 +509,7 @@ function makeIndex() {
     });
 }
 
-function grid() {
+function startGrid() {
     $.getJSON('/api/configs', configs=> {
          let config = choose(configs);
          config.badgeHeight = config.name == 'c2017' ? 24 :30;
