@@ -111,8 +111,9 @@ class Editor {
     fillOverride: string;
     imageLimitsFraction: Box;
     dropPrinted: boolean;
+    singleSvg: boolean;
 
-    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true, fillOverride=null, dropPrinted=true) {
+    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true, fillOverride=null, dropPrinted=true, singleSvg=false) {
         this.config = config;
         this.badgemap = {};
         if (is_safari) {
@@ -127,6 +128,7 @@ class Editor {
         this.fillOverride = fillOverride;
         this.imageLimitsFraction = {origin: new Vector(0.05, 0.05), size:new Vector(0.5, 0.90)}; // image limits as fractons
         this.dropPrinted = dropPrinted;
+        this.singleSvg = singleSvg;
     }
 
     drop(ev, index:number) {
@@ -233,7 +235,7 @@ class Editor {
         $('#badges').append(`<div class="badgeContainer" id="${handle}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
 
 
-        let id = `badgeSvg${badge.id}`;
+        let id = this.singleSvg ? `mainSvg` : `badgeSvg${badge.id}`;
         let paper = Snap(`#${id}`);
         if (paper == null) {
             console.log(`ERROR: coloud not find id ${id}`)
@@ -547,7 +549,7 @@ function startAnimation() {
          config.imageTop = 0;
          config.imageBottom = 1;
           
-         let editor = new Editor(config, false, true, 1000, false, "black", false);
+         let editor = new Editor(config, false, true, 1000, false, "black", false, true);
          editor.imageLimitsFraction.origin = new Vector(0,0.1);
          editor.imageLimitsFraction.size = new Vector(1, 0.75);
          editor.loadBadges(false);
