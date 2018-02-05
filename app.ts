@@ -131,6 +131,7 @@ async function go() {
         {path:'public/compose.html', route:'/configs/:config/compose'}, 
         {path:'public/view.html', route:'/configs/:config/view'}, 
         {path:'public/grid.html', route:'/configs/:config/grid'}, 
+        {path:'public/animation.html', route:'/configs/:config/animation'}, 
         {path:'public/index.html', route:'/'}, 
         {path:'build/client.js', route: '/js/client.js'}, 
         {path:'node_modules/golden-layout/src/css/goldenlayout-light-theme.css', route: '/css/goldenlayout-light-theme.css'},

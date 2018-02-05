@@ -110,8 +110,9 @@ class Editor {
     showBackground: boolean;
     fillOverride: string;
     imageLimitsFraction: Box;
+    dropPrinted: boolean;
 
-    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true, fillOverride=null) {
+    constructor(config:Config, low=false, grid=false, limit=-1, showBackground=true, fillOverride=null, dropPrinted=true) {
         this.config = config;
         this.badgemap = {};
         if (is_safari) {
@@ -125,6 +126,7 @@ class Editor {
         this.showBackground = showBackground;
         this.fillOverride = fillOverride;
         this.imageLimitsFraction = {origin: new Vector(0.05, 0.05), size:new Vector(0.5, 0.90)}; // image limits as fractons
+        this.dropPrinted = dropPrinted;
     }
 
     drop(ev, index:number) {
@@ -223,7 +225,7 @@ class Editor {
         let handle = this.getHandle(badge);
         let oldBadge = $(`#${handle}`).first();
         if (oldBadge) {
-            console.log(`found old bage element element`);
+            console.log(`found old badge element element`);
             oldBadge.remove();
         } else {
             console.log(`no badge found in DOM with id ${oldBadge}`);
@@ -232,6 +234,7 @@ class Editor {
 
 
         let paper = Snap(`#badgeSvg${badge.id}`);
+        if (paper === undefined)
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         const badgeSize = new Vector(this.config.badgeWidth, this.config.badgeHeight);
         
@@ -370,7 +373,7 @@ class Editor {
                 badges.map(x=> console.log(`badge ${JSON.stringify(x)}`));
                 this.badges = {};
                 let badgeseq = [];
-                badges.filter(x=>x.printed == 0 || x.printed === null).map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
+                badges.filter(x=>x.printed == 0 || x.printed === null || !this.dropPrinted).map(x=>badgeseq.push(x.first+' '+x.last+' '+x.id));
                 console.log(`badgeseq = ${badgeseq.length}`);
                 badges.map(x=> {
                     this.badges[x.id] = x;
@@ -483,7 +486,7 @@ function compose() {
     }, 100);
 }
 
-
+// entry point for the configs/$CONFIG/view page, called from a script tag on that page
 function startView() {       
      $.getJSON('/api/configs', configs=> {
          editor = new Editor(choose(configs), false, false, 1000, true, null); 
@@ -491,6 +494,7 @@ function startView() {
      });
 }
 
+// entry point for the configs/$CONFIG/compose page, called from a script tag on that page
 function startCompose() {
     console.log("make index starting");
     $.getJSON('/api/configs', configs=> {
@@ -502,14 +506,34 @@ function startCompose() {
             $('body').append($('<span>').append(' or '));
             $('body').append($('<a>').attr('href', `/configs/${x.name}/view`).append('View'));            
             $('body').append($('<span>').append(' or '));
-            $('body').append($('<a>').attr('href', `/configs/${x.name}/grid`).append('Grid'));            
+            $('body').append($('<a>').attr('href', `/configs/${x.name}/grid`).append('Grid'));      
+            $('body').append($('<span>').append(' or '));
+            $('body').append($('<a>').attr('href', `/configs/${x.name}/animation`).append('Animation'));            
         });
         if (configs.length == 0) 
             $('body').append("No configs set up! please add at least one row to the config table. TODO: add a form to create configs")
     });
 }
 
+// entry point for the configs/$CONFIG/grid page, called from a 
 function startGrid() {
+    $.getJSON('/api/configs', configs=> {
+         let config = choose(configs);
+         config.badgeHeight = config.name == 'c2017' ? 24 :45;
+         config.badgeWidth = config.name == 'c2017' ? 20 : 42;
+         config.imageLeft = 0;
+         config.imageRight = 1;
+         config.imageTop = 0;
+         config.imageBottom = 1;
+         
+         let editor = new Editor(config, false, true, 1000, false,  "black", false); 
+         editor.imageLimitsFraction.origin = new Vector(0,0.1);
+         editor.imageLimitsFraction.size = new Vector(1, 0.85);
+         editor.loadBadges(false);
+    });
+}
+
+function startAnimation() {
     $.getJSON('/api/configs', configs=> {
          let config = choose(configs);
          config.badgeHeight = config.name == 'c2017' ? 24 :30;
@@ -518,8 +542,8 @@ function startGrid() {
          config.imageRight = 1;
          config.imageTop = 0;
          config.imageBottom = 1;
-         
-         let editor = new Editor(config, false, true, 1000, false, "black"); 
+          
+         let editor = new Editor(config, false, true, 1000, false, "black", false);
          editor.imageLimitsFraction.origin = new Vector(0,0.1);
          editor.imageLimitsFraction.size = new Vector(1, 0.75);
          editor.loadBadges(false);
