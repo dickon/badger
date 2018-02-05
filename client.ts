@@ -233,8 +233,12 @@ class Editor {
         $('#badges').append(`<div class="badgeContainer" id="${handle}" onclick="editor.select(${badge.id})"><svg class="badge" id="badgeSvg${badge.id}" width="${this.config.badgeWidth}mm" height="${this.config.badgeHeight}mm" viewbox="0 0 ${this.config.badgeWidth} ${this.config.badgeHeight}" ondragover="allowDrop(event)" ondrop="editor.drop(event, ${badge.id})"> </svg></span>`);
 
 
-        let paper = Snap(`#badgeSvg${badge.id}`);
-        if (paper === undefined)
+        let id = `badgeSvg${badge.id}`;
+        let paper = Snap(`#${id}`);
+        if (paper == null) {
+            console.log(`ERROR: coloud not find id ${id}`)
+            return;
+        }
         if (!this.grid) paper.image(`/api/configs/${this.config.name}/background`, 0,0, this.config.badgeWidth, this.config.badgeHeight);
         const badgeSize = new Vector(this.config.badgeWidth, this.config.badgeHeight);
         
